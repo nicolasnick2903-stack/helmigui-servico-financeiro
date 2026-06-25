@@ -5,13 +5,21 @@ let _db = null, _auth = null, _app = null;
 
 function initFirebase() {
   if (_app) return;
+  const cfg = CONFIG.FIREBASE || {};
+  // Só inicializa se a apiKey estiver preenchida
+  if (!cfg.apiKey) {
+    console.info("Firebase não configurado — usando localStorage como armazenamento.");
+    return;
+  }
   try {
-    _app  = firebase.initializeApp(CONFIG.FIREBASE);
+    _app  = firebase.initializeApp(cfg);
     _db   = firebase.firestore();
     _auth = firebase.auth();
     _db.settings({ experimentalForceLongPolling: true });
+    console.info("Firebase inicializado com sucesso.");
   } catch (e) {
-    console.warn("Firebase não inicializado — usando localStorage como fallback:", e.message);
+    console.warn("Falha ao inicializar Firebase — usando localStorage:", e.message);
+    _app = null; _db = null; _auth = null;
   }
 }
 
@@ -21,12 +29,41 @@ function auth() { return _auth; }
 // ── Auth ──────────────────────────────────────────────────────────────────────
 async function loginComEmail(email, senha) {
   initFirebase();
-  const cred = await _auth.signInWithEmailAndPassword(email, senha);
-  return cred.user;
+  if (_auth) {
+    const cred = await _auth.signInWithEmailAndPassword(email, senha);
+    return cred.user;
+  }
+
+  // Modo localStorage: admin entra com qualquer senha (simplificado para desenvolvimento)
+  // Para produção, substitua pelo Firebase com Auth configurado
+  const emailLower = (email || "").toLowerCase().trim();
+  const admins     = (CONFIG.ADMIN_EMAILS || []).map(e => e.toLowerCase());
+
+  // Simula usuários clientes armazenados localmente
+  const usuarios = JSON.parse(localStorage.getItem("helmigui_usuarios") || "[]");
+  const usuario  = usuarios.find(u => u.email.toLowerCase() === emailLower);
+
+  if (admins.includes(emailLower)) {
+    // Admin: aceita qualquer senha em modo localStorage (sem Firebase não há verificação real)
+    const user = { uid: "admin-" + emailLower, email };
+    localStorage.setItem("helmigui_uid",     user.uid);
+    localStorage.setItem("helmigui_email",   email);
+    localStorage.setItem("helmigui_isAdmin", "true");
+    return user;
+  } else if (usuario && usuario.senha === senha) {
+    const user = { uid: usuario.uid || emailLower, email };
+    localStorage.setItem("helmigui_uid",   user.uid);
+    localStorage.setItem("helmigui_email", email);
+    return user;
+  } else {
+    const err = new Error("E-mail ou senha incorretos.");
+    err.code  = "auth/invalid-credential";
+    throw err;
+  }
 }
 
 async function logout() {
-  if (_auth) await _auth.signOut();
+  if (_auth) try { await _auth.signOut(); } catch {}
   localStorage.removeItem("helmigui_uid");
   localStorage.removeItem("helmigui_email");
   localStorage.removeItem("helmigui_isAdmin");
@@ -34,7 +71,14 @@ async function logout() {
 
 function onAuthChange(cb) {
   initFirebase();
-  if (!_auth) { cb(null); return; }
+  if (!_auth) {
+    // Modo localStorage: restaura sessão do localStorage
+    const uid   = localStorage.getItem("helmigui_uid");
+    const email = localStorage.getItem("helmigui_email");
+    if (uid && email) cb({ uid, email });
+    else cb(null);
+    return;
+  }
   _auth.onAuthStateChanged(cb);
 }
 
