@@ -1,1123 +1,1002 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0F5132" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Helmigui Serviços Financeiros | Gestão Financeira Empresarial</title>
-  <meta name="description" content="Especialistas em BPO Financeiro, gestão financeira empresarial, contas a pagar e receber, fluxo de caixa e consultoria financeira." />
-  <meta name="keywords" content="BPO financeiro, gestão financeira, fluxo de caixa, contas a pagar, contas a receber, consultoria financeira empresarial" />
-  <meta property="og:title" content="Helmigui Serviços Financeiros | Gestão Financeira Empresarial" />
-  <meta property="og:description" content="Organizamos seu financeiro, reduzimos custos e entregamos informações estratégicas para sua empresa crescer." />
-  <meta property="og:type" content="website" />
-  <link rel="icon" href="identidade-visual/icon-mark.png" />
-  <link rel="apple-touch-icon" href="identidade-visual/icon-mark.png" />
-
-  <!-- Fontes -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-
-  <!-- EmailJS -->
+  <meta name="description" content="Especialistas em BPO Financeiro, Fluxo de Caixa, Contas a Pagar e Receber, Relatórios Financeiros e Consultoria Empresarial."/>
+  <meta name="keywords" content="BPO financeiro, gestão financeira, fluxo de caixa, contas a pagar, contas a receber, conciliação bancária, relatórios gerenciais"/>
+  <meta name="robots" content="index,follow"/>
+  <meta property="og:title" content="Helmigui Serviços Financeiros | Gestão Financeira Empresarial"/>
+  <meta property="og:description" content="Organizamos seu financeiro, reduzimos custos e entregamos informações estratégicas para sua empresa crescer."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:locale" content="pt_BR"/>
+  <link rel="icon" href="identidade-visual/icon-mark.png" type="image/png"/>
+  <link rel="canonical" href="https://helmigui-servico-financeiro.vercel.app/"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
   <style>
-    /* ── Tokens ─────────────────────────────────────────────────────────── */
-    :root {
-      --verde: #0F5132;
-      --verde-light: #1a7a4a;
-      --verde-dark: #0a3d26;
-      --ouro: #D4AF37;
-      --ouro-light: #e8c94b;
-      --branco: #FFFFFF;
-      --cinza-claro: #F8F9FA;
-      --cinza: #6c757d;
-      --cinza-escuro: #343A40;
-      --sombra: 0 4px 24px rgba(15,81,50,.12);
-      --sombra-ouro: 0 4px 24px rgba(212,175,55,.25);
-      --radius: 16px;
-      --transition: .3s cubic-bezier(.4,0,.2,1);
-    }
-
-    /* ── Reset ───────────────────────────────────────────────────────────── */
+    /* ── Reset & Base ─────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Inter', sans-serif;
-      color: var(--cinza-escuro);
-      background: var(--branco);
-      overflow-x: hidden;
-    }
-    img { max-width: 100%; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: 'Inter', sans-serif; color: #1C2B22; background: #fff; overflow-x: hidden; }
+    img { max-width: 100%; display: block; }
     a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; cursor: pointer; border: none; }
 
-    /* ── Header ──────────────────────────────────────────────────────────── */
-    header {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-      padding: 14px 0;
-      background: rgba(255,255,255,.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(15,81,50,.1);
-      transition: box-shadow var(--transition);
+    /* ── Tokens ───────────────────────────────────────────────────────────── */
+    :root {
+      --verde:    #0F5132;
+      --verde-l:  #1a7a4a;
+      --verde-d:  #0a3d26;
+      --verde-xs: #E8F2EC;
+      --ouro:     #D4AF37;
+      --ouro-l:   #E8C94B;
+      --ouro-d:   #A8892A;
+      --cinza:    #F5F6F5;
+      --cinza-m:  #8A9A8D;
+      --ink:      #1C2B22;
+      --border:   #DDE8DD;
     }
-    header.scrolled { box-shadow: 0 2px 20px rgba(15,81,50,.12); }
+
+    /* ── Utilitários ──────────────────────────────────────────────────────── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 100px 0; }
+    .section-sm { padding: 70px 0; }
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--ouro);
+      margin-bottom: 14px;
+    }
+    .heading-xl {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800; font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1.12; color: var(--ink);
+    }
+    .heading-lg {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800; font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+      line-height: 1.2; color: var(--ink);
+    }
+    .heading-md {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700; font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      line-height: 1.3; color: var(--ink);
+    }
+    .lead { font-size: clamp(1rem, 1.5vw, 1.15rem); color: #4A5E50; line-height: 1.75; }
+    .text-verde { color: var(--verde); }
+    .text-ouro  { color: var(--ouro);  }
+    .text-center { text-align: center; }
+    .reveal { opacity: 0; transform: translateY(32px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── Botões ───────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px; border-radius: 8px;
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.92rem;
+      letter-spacing: .02em; transition: all .2s ease; white-space: nowrap;
+    }
+    .btn-prim {
+      background: var(--verde); color: #fff;
+      box-shadow: 0 4px 20px rgba(15,81,50,.25);
+    }
+    .btn-prim:hover { background: var(--verde-l); box-shadow: 0 6px 28px rgba(15,81,50,.35); transform: translateY(-2px); }
+    .btn-ouro {
+      background: var(--ouro); color: #0a3d26;
+      box-shadow: 0 4px 20px rgba(212,175,55,.3);
+    }
+    .btn-ouro:hover { background: var(--ouro-l); box-shadow: 0 6px 28px rgba(212,175,55,.4); transform: translateY(-2px); }
+    .btn-ghost {
+      background: transparent; color: #fff;
+      border: 2px solid rgba(255,255,255,.5);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.1); border-color: #fff; transform: translateY(-2px); }
+    .btn-outline {
+      background: transparent; color: var(--verde);
+      border: 2px solid var(--verde);
+    }
+    .btn-outline:hover { background: var(--verde); color: #fff; transform: translateY(-2px); }
+    .btn-lg { padding: 17px 40px; font-size: 1rem; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════════════════════════════════ */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0); backdrop-filter: blur(0px);
+      border-bottom: 1px solid transparent;
+      transition: background .3s, backdrop-filter .3s, border-color .3s, box-shadow .3s;
+    }
+    .header.scrolled {
+      background: rgba(255,255,255,.97); backdrop-filter: blur(12px);
+      border-color: var(--border); box-shadow: 0 2px 20px rgba(0,0,0,.06);
+    }
     .header-inner {
-      max-width: 1200px; margin: 0 auto;
-      padding: 0 24px;
       display: flex; align-items: center; gap: 32px;
+      height: 76px; max-width: 1200px; margin: 0 auto; padding: 0 24px;
     }
-    .header-logo { height: 44px; object-fit: contain; }
-    .header-logo-text {
-      font-family: 'Poppins', sans-serif; font-weight: 700;
-      font-size: 1.1rem; color: var(--verde);
-      display: flex; flex-direction: column; line-height: 1.1;
+    .header-logo {
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
     }
-    .header-logo-text span { font-size: 0.6rem; font-weight: 500; color: var(--ouro); letter-spacing: .1em; text-transform: uppercase; }
-    nav { display: flex; gap: 8px; margin-left: auto; }
-    nav a {
-      font-family: 'Inter', sans-serif; font-weight: 500;
-      font-size: 0.88rem; color: var(--cinza-escuro);
-      padding: 7px 14px; border-radius: 8px;
-      transition: color var(--transition), background var(--transition);
-    }
-    nav a:hover { color: var(--verde); background: rgba(15,81,50,.06); }
-    .btn-header {
-      font-family: 'Poppins', sans-serif; font-weight: 600;
-      font-size: 0.85rem;
-      background: var(--ouro); color: var(--cinza-escuro);
-      padding: 10px 20px; border-radius: 10px;
-      border: none; cursor: pointer;
-      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
-      box-shadow: var(--sombra-ouro);
-      white-space: nowrap;
-    }
-    .btn-header:hover { background: var(--ouro-light); transform: translateY(-1px); box-shadow: 0 6px 28px rgba(212,175,55,.35); }
-    .menu-mobile { display: none; background: none; border: none; cursor: pointer; padding: 6px; }
-    .menu-mobile span { display: block; width: 24px; height: 2px; background: var(--cinza-escuro); margin: 5px 0; border-radius: 2px; transition: var(--transition); }
+    .header-logo img { height: 38px; width: auto; }
+    .logo-text { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.05rem; line-height: 1.1; }
+    .logo-text span { display: block; font-size: .6rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--cinza-m); }
+    .header:not(.scrolled) .logo-text { color: #fff; }
+    .header:not(.scrolled) .logo-text span { color: rgba(255,255,255,.6); }
+    .header.scrolled .logo-text { color: var(--verde-d); }
 
-    /* ── Hero ────────────────────────────────────────────────────────────── */
-    #inicio {
-      min-height: 100vh;
-      display: flex; align-items: center;
-      background: linear-gradient(135deg, var(--verde-dark) 0%, var(--verde) 50%, #1a6b40 100%);
-      position: relative; overflow: hidden;
-      padding-top: 80px;
+    nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+    .nav-link {
+      padding: 8px 14px; border-radius: 6px; font-size: .88rem; font-weight: 500;
+      color: rgba(255,255,255,.85); transition: all .15s;
     }
-    .hero-bg-grid {
-      position: absolute; inset: 0; opacity: .05;
-      background-image: linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
-      background-size: 40px 40px;
+    .header.scrolled .nav-link { color: var(--ink); }
+    .nav-link:hover { color: var(--ouro) !important; }
+    .nav-link.ativo { color: var(--ouro) !important; font-weight: 700; }
+
+    .header-cta { margin-left: 12px; }
+    .header:not(.scrolled) .btn-prim { background: var(--ouro); color: var(--verde-d); }
+    .header:not(.scrolled) .btn-prim:hover { background: var(--ouro-l); }
+
+    /* Mobile nav */
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px; background: none;
+      padding: 6px; border-radius: 6px; margin-left: auto;
     }
-    .hero-glow {
-      position: absolute; width: 600px; height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(212,175,55,.15) 0%, transparent 70%);
-      top: -100px; right: -100px; pointer-events: none;
+    .hamburger span {
+      display: block; width: 24px; height: 2px; border-radius: 2px;
+      background: #fff; transition: all .3s;
+    }
+    .header.scrolled .hamburger span { background: var(--ink); }
+    .hamburger.aberto span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.aberto span:nth-child(2) { opacity: 0; }
+    .hamburger.aberto span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .nav-mobile {
+      display: none; flex-direction: column; gap: 4px;
+      background: #fff; padding: 16px 24px 24px;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    }
+    .nav-mobile.aberto { display: flex; }
+    .nav-mobile .nav-link { color: var(--ink); padding: 10px 4px; font-size: .95rem; border-bottom: 1px solid var(--border); border-radius: 0; }
+    .nav-mobile .nav-link:last-child { border-bottom: none; }
+    .nav-mobile .btn { width: 100%; justify-content: center; margin-top: 8px; }
+
+    @media(max-width: 860px) {
+      nav, .header-cta { display: none; }
+      .hamburger { display: flex; }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════════════════════════════════ */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      background: linear-gradient(140deg, var(--verde-d) 0%, var(--verde) 55%, #1a6642 100%);
+      position: relative; overflow: hidden; padding-top: 76px;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-decor {
+      position: absolute; right: -100px; top: 50%; transform: translateY(-50%);
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,175,55,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-decor-2 {
+      position: absolute; left: -200px; bottom: -200px;
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.04) 0%, transparent 70%);
+      pointer-events: none;
     }
     .hero-inner {
-      max-width: 1200px; margin: 0 auto; padding: 80px 24px;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
-      position: relative; z-index: 1;
+      position: relative; z-index: 2;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+      align-items: center; max-width: 1200px; margin: 0 auto; padding: 80px 24px;
     }
-    .hero-badge {
+    @media(max-width: 860px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; text-align: center; padding: 60px 24px; }
+      .hero-btns { justify-content: center; }
+    }
+    .hero-label {
       display: inline-flex; align-items: center; gap: 8px;
       background: rgba(212,175,55,.15); border: 1px solid rgba(212,175,55,.3);
-      border-radius: 20px; padding: 6px 14px; margin-bottom: 20px;
-      font-size: 0.78rem; font-weight: 600; color: var(--ouro);
-      letter-spacing: .05em; text-transform: uppercase;
+      border-radius: 100px; padding: 6px 16px; margin-bottom: 24px;
     }
-    .hero-titulo {
+    .hero-label span { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ouro); }
+    .hero-label-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ouro); animation: pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+    .hero h1 {
+      font-family: 'Poppins', sans-serif; font-weight: 900;
+      font-size: clamp(2.2rem, 5.5vw, 4rem); line-height: 1.1;
+      color: #fff; margin-bottom: 24px;
+    }
+    .hero h1 em { font-style: normal; color: var(--ouro); }
+    .hero-desc { font-size: clamp(.95rem, 1.5vw, 1.1rem); color: rgba(255,255,255,.8); line-height: 1.8; margin-bottom: 40px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex; gap: 32px; margin-top: 56px; flex-wrap: wrap;
+    }
+    @media(max-width: 860px) { .hero-stats { justify-content: center; } }
+    .hero-stat-num {
       font-family: 'Poppins', sans-serif; font-weight: 800;
-      font-size: clamp(1.8rem, 3.5vw, 3rem);
-      color: var(--branco); line-height: 1.15; margin-bottom: 20px;
+      font-size: 2rem; color: var(--ouro); line-height: 1;
     }
-    .hero-titulo em { color: var(--ouro); font-style: normal; }
-    .hero-subtitulo {
-      font-size: 1rem; color: rgba(255,255,255,.8);
-      line-height: 1.7; margin-bottom: 36px;
-    }
-    .hero-botoes { display: flex; gap: 14px; flex-wrap: wrap; }
-    .btn-primario {
-      font-family: 'Poppins', sans-serif; font-weight: 600;
-      font-size: 0.92rem;
-      background: var(--ouro); color: var(--cinza-escuro);
-      padding: 14px 28px; border-radius: 12px; border: none;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-      transition: all var(--transition); box-shadow: var(--sombra-ouro);
-    }
-    .btn-primario:hover { background: var(--ouro-light); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(212,175,55,.4); }
-    .btn-outline {
-      font-family: 'Poppins', sans-serif; font-weight: 600;
-      font-size: 0.92rem;
-      background: transparent; color: var(--branco);
-      padding: 14px 28px; border-radius: 12px;
-      border: 2px solid rgba(255,255,255,.4);
-      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-      transition: all var(--transition);
-    }
-    .btn-outline:hover { border-color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); transform: translateY(-2px); }
+    .hero-stat-lbl { font-size: .78rem; color: rgba(255,255,255,.65); margin-top: 4px; }
 
-    /* Dashboard mockup */
-    .hero-dashboard {
-      background: rgba(255,255,255,.08);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 20px; padding: 24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    /* Dashboard card flutuante */
+    .hero-card {
+      background: rgba(255,255,255,.06); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 20px;
+      padding: 28px; animation: float 5s ease-in-out infinite;
     }
-    .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .dash-titulo { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--branco); }
-    .dash-badge { font-size: 0.68rem; background: rgba(212,175,55,.2); color: var(--ouro); padding: 3px 10px; border-radius: 20px; font-weight: 600; }
-    .dash-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .dash-card {
-      background: rgba(255,255,255,.08); border-radius: 12px; padding: 14px;
-      border: 1px solid rgba(255,255,255,.1);
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .hero-card-title {
+      font-family: 'Poppins', sans-serif; font-weight: 700; font-size: .85rem;
+      color: rgba(255,255,255,.7); margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
     }
-    .dash-card-label { font-size: 0.65rem; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
-    .dash-card-valor { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.1rem; }
-    .dash-card-valor.verde { color: #4ade80; }
-    .dash-card-valor.ouro  { color: var(--ouro); }
-    .dash-card-valor.branco { color: var(--branco); }
-    .dash-card-var { font-size: 0.68rem; margin-top: 3px; }
-    .dash-card-var.up { color: #4ade80; }
-    .dash-card-var.down { color: #f87171; }
-    /* Barras do gráfico */
-    .dash-grafico { display: flex; align-items: flex-end; gap: 6px; height: 70px; padding: 0 4px; }
-    .dash-barra {
-      flex: 1; border-radius: 4px 4px 0 0;
-      background: linear-gradient(to top, rgba(212,175,55,.4), rgba(212,175,55,.8));
-      transition: opacity .3s;
+    .hero-card-title::before { content:''; width:8px;height:8px;border-radius:50%;background:var(--ouro); }
+    .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .kpi-box {
+      background: rgba(255,255,255,.06); border-radius: 12px; padding: 14px;
+      border: 1px solid rgba(255,255,255,.08);
     }
-    .dash-barra.alt { background: linear-gradient(to top, rgba(74,222,128,.4), rgba(74,222,128,.8)); }
+    .kpi-box-lbl { font-size: .62rem; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+    .kpi-box-val { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.1rem; color: #fff; }
+    .kpi-box-val.pos { color: #6EE7A0; } .kpi-box-val.neg { color: #FCA5A5; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 64px; }
+    .chart-bar { flex: 1; border-radius: 4px 4px 0 0; }
+    .bar-ent { background: rgba(110,231,160,.6); }
+    .bar-sai { background: rgba(252,165,165,.5); }
+    .chart-labels { display: flex; gap: 6px; margin-top: 6px; }
+    .chart-label { flex: 1; text-align: center; font-size: .55rem; color: rgba(255,255,255,.4); }
 
-    /* ── Seções base ─────────────────────────────────────────────────────── */
-    section { padding: 90px 0; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    .secao-eyebrow {
-      font-family: 'Poppins', sans-serif; font-weight: 600;
-      font-size: 0.75rem; letter-spacing: .12em; text-transform: uppercase;
-      color: var(--ouro); margin-bottom: 10px;
-    }
-    .secao-titulo {
-      font-family: 'Poppins', sans-serif; font-weight: 700;
-      font-size: clamp(1.6rem, 3vw, 2.2rem);
-      color: var(--cinza-escuro); margin-bottom: 16px; line-height: 1.2;
-    }
-    .secao-titulo em { color: var(--verde); font-style: normal; }
-    .secao-subtitulo { font-size: 1rem; color: var(--cinza); line-height: 1.7; max-width: 600px; }
-    .text-center { text-align: center; }
-    .text-center .secao-subtitulo { margin: 0 auto; }
+    @media(max-width: 860px) { .hero-card { display: none; } }
 
-    /* ── Serviços ────────────────────────────────────────────────────────── */
-    #servicos { background: var(--cinza-claro); }
+    /* ══════════════════════════════════════════════════════════════════════
+       CLIENTES LOGOS
+    ══════════════════════════════════════════════════════════════════════ */
+    .logos-strip {
+      background: var(--cinza); padding: 32px 0;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .logos-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      justify-content: center;
+    }
+    .logos-lbl { font-size: .72rem; font-weight: 700; color: var(--cinza-m); text-transform: uppercase; letter-spacing: .1em; margin-right: 8px; }
+    .logos-items { display: flex; align-items: center; gap: 40px; flex-wrap: wrap; justify-content: center; }
+    .logo-item {
+      font-family: 'Poppins', sans-serif; font-weight: 700; font-size: .9rem;
+      color: #bcc8be; letter-spacing: .04em; transition: color .2s;
+    }
+    .logo-item:hover { color: var(--verde); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SERVIÇOS
+    ══════════════════════════════════════════════════════════════════════ */
+    .servicos { background: #fff; }
+    .servicos-header { text-align: center; max-width: 640px; margin: 0 auto 64px; }
     .servicos-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px; margin-top: 48px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
     }
-    .card-servico {
-      background: var(--branco);
-      border-radius: var(--radius); padding: 32px;
-      box-shadow: var(--sombra);
-      border: 1px solid transparent;
-      transition: all var(--transition);
-      position: relative; overflow: hidden;
+    @media(max-width: 980px) { .servicos-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width: 580px) { .servicos-grid { grid-template-columns: 1fr; } }
+
+    .servico-card {
+      border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px;
+      transition: all .25s ease; background: #fff; position: relative; overflow: hidden;
     }
-    .card-servico::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    .servico-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
       background: linear-gradient(90deg, var(--verde), var(--ouro));
-      opacity: 0; transition: opacity var(--transition);
+      transform: scaleX(0); transform-origin: left; transition: transform .3s ease;
     }
-    .card-servico:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(15,81,50,.15); border-color: rgba(15,81,50,.1); }
-    .card-servico:hover::before { opacity: 1; }
-    .card-servico-icone {
-      width: 52px; height: 52px; border-radius: 14px;
-      background: linear-gradient(135deg, rgba(15,81,50,.1), rgba(212,175,55,.1));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; margin-bottom: 18px;
-      transition: transform var(--transition);
+    .servico-card:hover { border-color: transparent; box-shadow: 0 12px 40px rgba(15,81,50,.12); transform: translateY(-6px); }
+    .servico-card:hover::after { transform: scaleX(1); }
+    .servico-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: var(--verde-xs); display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 20px; transition: background .2s;
     }
-    .card-servico:hover .card-servico-icone { transform: scale(1.1); }
-    .card-servico h3 {
-      font-family: 'Poppins', sans-serif; font-weight: 700;
-      font-size: 1rem; color: var(--cinza-escuro); margin-bottom: 10px;
+    .servico-card:hover .servico-icon { background: var(--verde); }
+    .servico-card h3 {
+      font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.05rem;
+      color: var(--ink); margin-bottom: 10px;
     }
-    .card-servico p { font-size: 0.88rem; color: var(--cinza); line-height: 1.6; }
-    .card-servico-link {
+    .servico-card p { font-size: .88rem; color: #4A5E50; line-height: 1.7; }
+    .servico-link {
       display: inline-flex; align-items: center; gap: 6px;
-      margin-top: 16px; font-size: 0.82rem; font-weight: 600;
-      color: var(--verde); opacity: 0;
-      transition: opacity var(--transition), gap var(--transition);
+      margin-top: 18px; font-size: .82rem; font-weight: 700;
+      color: var(--verde); transition: gap .2s;
     }
-    .card-servico:hover .card-servico-link { opacity: 1; gap: 10px; }
+    .servico-card:hover .servico-link { gap: 10px; }
 
-    /* ── Diferenciais ────────────────────────────────────────────────────── */
-    .diferenciais-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px; margin-top: 48px;
+    /* ══════════════════════════════════════════════════════════════════════
+       DIFERENCIAIS / NÚMEROS
+    ══════════════════════════════════════════════════════════════════════ */
+    .diferenciais { background: var(--verde-d); }
+    .diferenciais-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
     }
-    .card-diferencial {
-      display: flex; align-items: flex-start; gap: 16px;
-      background: var(--branco); border-radius: var(--radius);
-      padding: 24px; box-shadow: var(--sombra);
-      transition: transform var(--transition);
+    @media(max-width: 860px) { .diferenciais-inner { grid-template-columns: 1fr; gap: 48px; } }
+    .diferenciais h2 { color: #fff; }
+    .diferenciais .lead { color: rgba(255,255,255,.7); }
+    .check-list { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
+    .check-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-size: .92rem; color: rgba(255,255,255,.85);
     }
-    .card-diferencial:hover { transform: translateY(-3px); }
-    .diferencial-check {
-      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--verde), var(--verde-light));
+    .check-item::before {
+      content: ''; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(212,175,55,.2); border: 1.5px solid var(--ouro);
       display: flex; align-items: center; justify-content: center;
-      color: var(--branco); font-size: 1rem; font-weight: 700;
-    }
-    .card-diferencial h4 {
-      font-family: 'Poppins', sans-serif; font-weight: 700;
-      font-size: 0.95rem; color: var(--cinza-escuro); margin-bottom: 4px;
-    }
-    .card-diferencial p { font-size: 0.82rem; color: var(--cinza); line-height: 1.5; }
-
-    /* ── Números ─────────────────────────────────────────────────────────── */
-    #numeros {
-      background: linear-gradient(135deg, var(--verde-dark), var(--verde));
-      position: relative; overflow: hidden;
-    }
-    #numeros::before {
-      content: '';
-      position: absolute; inset: 0; opacity: .04;
-      background-image: radial-gradient(circle, var(--branco) 1px, transparent 1px);
-      background-size: 30px 30px;
-    }
-    .numeros-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 32px; position: relative; z-index: 1;
-    }
-    .numero-item { text-align: center; }
-    .numero-valor {
-      font-family: 'Poppins', sans-serif; font-weight: 800;
-      font-size: clamp(2rem, 4vw, 3rem);
-      color: var(--ouro); display: block; margin-bottom: 8px;
-    }
-    .numero-label {
-      font-size: 0.85rem; color: rgba(255,255,255,.75); font-weight: 500;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='9' viewBox='0 0 12 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4L4.5 7.5L11 1' stroke='%23D4AF37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: center;
     }
 
-    /* ── Como Funciona ───────────────────────────────────────────────────── */
-    #como-funciona { background: var(--cinza-claro); }
-    .timeline {
-      display: flex; flex-direction: column; gap: 0;
-      max-width: 700px; margin: 48px auto 0; position: relative;
+    .numeros-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .numero-box {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; padding: 28px; text-align: center;
     }
-    .timeline::before {
-      content: '';
-      position: absolute; left: 27px; top: 28px; bottom: 28px;
-      width: 2px; background: linear-gradient(to bottom, var(--verde), var(--ouro));
+    .numero-num {
+      font-family: 'Poppins', sans-serif; font-weight: 900;
+      font-size: 2.6rem; color: var(--ouro); line-height: 1;
     }
-    .timeline-item {
-      display: flex; gap: 24px; padding-bottom: 36px;
-      opacity: 0; transform: translateX(-30px);
-      transition: opacity .6s ease, transform .6s ease;
+    .numero-lbl { font-size: .8rem; color: rgba(255,255,255,.6); margin-top: 8px; line-height: 1.4; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       COMO FUNCIONA
+    ══════════════════════════════════════════════════════════════════════ */
+    .como { background: var(--cinza); }
+    .como-header { text-align: center; max-width: 600px; margin: 0 auto 64px; }
+    .etapas { display: flex; flex-direction: column; gap: 0; max-width: 760px; margin: 0 auto; position: relative; }
+    .etapas::before {
+      content: ''; position: absolute; left: 27px; top: 28px; bottom: 28px; width: 2px;
+      background: linear-gradient(to bottom, var(--verde), var(--ouro));
     }
-    .timeline-item.visivel { opacity: 1; transform: translateX(0); }
-    .timeline-num {
-      width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
-      background: var(--branco);
-      border: 3px solid var(--verde);
-      display: flex; align-items: center; justify-content: center;
+    .etapa { display: flex; gap: 28px; align-items: flex-start; padding: 28px 0; }
+    .etapa-num {
+      flex-shrink: 0; width: 56px; height: 56px; border-radius: 50%;
+      background: var(--verde); color: #fff;
       font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.1rem;
-      color: var(--verde); box-shadow: var(--sombra); position: relative; z-index: 1;
-    }
-    .timeline-conteudo {
-      background: var(--branco); border-radius: var(--radius);
-      padding: 20px 24px; box-shadow: var(--sombra);
-      flex: 1; border-left: 3px solid var(--ouro);
-    }
-    .timeline-conteudo h4 {
-      font-family: 'Poppins', sans-serif; font-weight: 700;
-      font-size: 0.95rem; color: var(--cinza-escuro); margin-bottom: 6px;
-    }
-    .timeline-conteudo p { font-size: 0.85rem; color: var(--cinza); line-height: 1.5; }
-
-    /* ── Sobre ───────────────────────────────────────────────────────────── */
-    .sobre-inner {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 64px; align-items: center;
-    }
-    .sobre-img-wrap {
-      border-radius: 20px; overflow: hidden;
-      position: relative; aspect-ratio: 4/3;
-      background: linear-gradient(135deg, var(--verde-dark), var(--verde));
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 20px 60px rgba(15,81,50,.25);
+      box-shadow: 0 0 0 4px var(--cinza), 0 0 0 6px var(--verde);
+      position: relative; z-index: 1;
     }
-    .sobre-img-wrap svg { width: 60%; opacity: .5; }
-    .sobre-badge {
-      position: absolute; bottom: 20px; left: 20px;
-      background: var(--ouro); color: var(--cinza-escuro);
-      padding: 10px 18px; border-radius: 12px;
-      font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.82rem;
+    .etapa:last-child .etapa-num { background: var(--ouro); box-shadow: 0 0 0 4px var(--cinza), 0 0 0 6px var(--ouro); color: var(--verde-d); }
+    .etapa-body h3 {
+      font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.05rem;
+      margin-bottom: 8px; color: var(--ink);
     }
-    .sobre-texto p { font-size: 0.95rem; color: var(--cinza); line-height: 1.8; margin-bottom: 20px; }
-    .sobre-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
-    .sobre-stat {
-      background: var(--cinza-claro); border-radius: 12px; padding: 16px;
-      border-left: 3px solid var(--ouro);
+    .etapa-body p { font-size: .9rem; color: #4A5E50; line-height: 1.7; }
+    @media(max-width: 580px) {
+      .etapas::before { left: 19px; }
+      .etapa-num { width: 40px; height: 40px; font-size: .85rem; }
     }
-    .sobre-stat-num {
-      font-family: 'Poppins', sans-serif; font-weight: 800;
-      font-size: 1.4rem; color: var(--verde);
-    }
-    .sobre-stat-txt { font-size: 0.78rem; color: var(--cinza); margin-top: 2px; }
 
-    /* ── Depoimentos ─────────────────────────────────────────────────────── */
-    #depoimentos { background: var(--cinza-claro); }
-    .slider-wrap { position: relative; overflow: hidden; margin-top: 48px; }
-    .slider-track {
-      display: flex; gap: 24px;
-      transition: transform .5s cubic-bezier(.4,0,.2,1);
+    /* ══════════════════════════════════════════════════════════════════════
+       DEPOIMENTOS
+    ══════════════════════════════════════════════════════════════════════ */
+    .depoimentos { background: #fff; }
+    .depo-header { text-align: center; max-width: 580px; margin: 0 auto 56px; }
+    .depo-slider-wrap { overflow: hidden; position: relative; }
+    .depo-slider { display: flex; gap: 24px; transition: transform .5s cubic-bezier(.4,0,.2,1); }
+    .depo-card {
+      flex-shrink: 0; width: calc(33.33% - 16px);
+      border: 1px solid var(--border); border-radius: 20px; padding: 32px;
+      position: relative; background: #fff; transition: box-shadow .2s;
     }
-    .card-depoimento {
-      flex: 0 0 calc(33.33% - 16px);
-      background: var(--branco); border-radius: var(--radius);
-      padding: 28px; box-shadow: var(--sombra);
-      border-top: 3px solid var(--ouro);
+    .depo-card:hover { box-shadow: 0 12px 40px rgba(15,81,50,.08); }
+    .depo-card::before {
+      content: '\201C'; position: absolute; top: 20px; right: 28px;
+      font-size: 5rem; line-height: 1; color: var(--verde-xs);
+      font-family: Georgia, serif;
     }
-    .depo-estrelas { color: var(--ouro); font-size: 0.9rem; margin-bottom: 14px; letter-spacing: 2px; }
-    .depo-texto { font-size: 0.9rem; color: var(--cinza); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+    .stars { color: var(--ouro); font-size: 1rem; letter-spacing: 2px; margin-bottom: 16px; }
+    .depo-texto { font-size: .9rem; color: #4A5E50; line-height: 1.8; margin-bottom: 24px; font-style: italic; }
     .depo-autor { display: flex; align-items: center; gap: 12px; }
     .depo-avatar {
       width: 44px; height: 44px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--verde), var(--ouro));
+      background: linear-gradient(135deg, var(--verde), var(--verde-l));
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Poppins', sans-serif; font-weight: 700; color: var(--branco); font-size: 1rem;
+      font-family: 'Poppins', sans-serif; font-weight: 700; font-size: .95rem; color: #fff;
+      flex-shrink: 0;
     }
-    .depo-nome { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.88rem; color: var(--cinza-escuro); }
-    .depo-cargo { font-size: 0.75rem; color: var(--cinza); }
-    .slider-dots { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
-    .slider-dot {
-      width: 8px; height: 8px; border-radius: 4px;
-      background: var(--cinza); opacity: .3;
-      border: none; cursor: pointer; transition: all .3s; padding: 0;
-    }
-    .slider-dot.ativo { opacity: 1; background: var(--ouro); width: 24px; }
+    .depo-nome { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: .88rem; }
+    .depo-empresa { font-size: .75rem; color: var(--cinza-m); }
 
-    /* ── Benefícios ──────────────────────────────────────────────────────── */
-    .beneficios-inner {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 64px; align-items: center;
-    }
-    .beneficios-img {
-      border-radius: 20px; overflow: hidden;
-      background: linear-gradient(135deg, #0a3d26, var(--verde));
-      padding: 32px;
-      box-shadow: 0 20px 60px rgba(15,81,50,.2);
-    }
-    /* Mini dashboard nos benefícios */
-    .mini-dash { display: flex; flex-direction: column; gap: 12px; }
-    .mini-dash-row { display: flex; align-items: center; gap: 12px; }
-    .mini-dash-bar-wrap { flex: 1; height: 8px; background: rgba(255,255,255,.15); border-radius: 4px; }
-    .mini-dash-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--ouro), var(--ouro-light)); }
-    .mini-dash-label { font-size: 0.75rem; color: rgba(255,255,255,.7); min-width: 80px; }
-    .mini-dash-val { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.75rem; color: var(--ouro); min-width: 36px; text-align: right; }
-    .beneficios-lista { display: flex; flex-direction: column; gap: 16px; }
-    .beneficio-item {
-      display: flex; align-items: flex-start; gap: 14px;
-      padding: 16px; background: var(--cinza-claro);
-      border-radius: 12px; transition: all var(--transition);
-    }
-    .beneficio-item:hover { background: rgba(15,81,50,.06); transform: translateX(4px); }
-    .beneficio-check {
-      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-      background: var(--verde); color: var(--branco);
-      display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
-    }
-    .beneficio-item h4 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; }
-    .beneficio-item p { font-size: 0.8rem; color: var(--cinza); }
+    .depo-nav { display: flex; justify-content: center; gap: 8px; margin-top: 36px; }
+    .depo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); border: none; padding: 0; transition: all .2s; cursor: pointer; }
+    .depo-dot.ativo { background: var(--verde); width: 24px; border-radius: 4px; }
 
-    /* ── CTA ─────────────────────────────────────────────────────────────── */
-    #cta {
-      background: linear-gradient(135deg, var(--ouro-light), var(--ouro), #b8962e);
-      text-align: center;
-    }
-    .cta-titulo {
-      font-family: 'Poppins', sans-serif; font-weight: 800;
-      font-size: clamp(1.6rem, 3vw, 2.4rem);
-      color: var(--cinza-escuro); margin-bottom: 16px;
-    }
-    .cta-sub { font-size: 1rem; color: rgba(52,58,64,.75); margin-bottom: 36px; }
-    .cta-botoes { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
-    .btn-verde {
-      font-family: 'Poppins', sans-serif; font-weight: 600;
-      font-size: 0.95rem;
-      background: var(--verde); color: var(--branco);
-      padding: 15px 32px; border-radius: 12px; border: none;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-      transition: all var(--transition);
-      box-shadow: 0 4px 20px rgba(15,81,50,.3);
-    }
-    .btn-verde:hover { background: var(--verde-light); transform: translateY(-2px); }
-    .btn-wpp {
-      font-family: 'Poppins', sans-serif; font-weight: 600;
-      font-size: 0.95rem;
-      background: #25D366; color: var(--branco);
-      padding: 15px 32px; border-radius: 12px; border: none;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-      transition: all var(--transition);
-    }
-    .btn-wpp:hover { background: #20ba5a; transform: translateY(-2px); }
+    @media(max-width: 860px) { .depo-card { width: calc(50% - 12px); } }
+    @media(max-width: 560px) { .depo-card { width: 90vw; } }
 
-    /* ── Contato ─────────────────────────────────────────────────────────── */
-    #contato { background: var(--cinza-claro); }
-    .contato-inner { display: grid; grid-template-columns: 1fr 1.4fr; gap: 64px; align-items: start; margin-top: 48px; }
-    .contato-info h3 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 20px; color: var(--cinza-escuro); }
-    .contato-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+    /* ══════════════════════════════════════════════════════════════════════
+       CTA BANNER
+    ══════════════════════════════════════════════════════════════════════ */
+    .cta-banner {
+      background: linear-gradient(135deg, var(--ouro-d), var(--ouro));
+      padding: 80px 0; text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-banner::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%230F5132' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .cta-banner .container { position: relative; z-index: 1; }
+    .cta-banner h2 {
+      font-family: 'Poppins', sans-serif; font-weight: 900;
+      font-size: clamp(1.8rem, 4vw, 2.8rem); color: var(--verde-d); margin-bottom: 16px;
+    }
+    .cta-banner p { font-size: 1.05rem; color: rgba(10,61,38,.75); margin-bottom: 36px; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-verde-dark { background: var(--verde-d); color: #fff; }
+    .btn-verde-dark:hover { background: var(--verde); transform: translateY(-2px); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       CONTATO
+    ══════════════════════════════════════════════════════════════════════ */
+    .contato { background: #fff; }
+    .contato-inner {
+      display: grid; grid-template-columns: 1fr 1.4fr; gap: 80px; align-items: start;
+    }
+    @media(max-width: 860px) { .contato-inner { grid-template-columns: 1fr; gap: 48px; } }
+    .contato-info h2 { margin-bottom: 16px; }
+    .contato-info .lead { margin-bottom: 36px; }
+    .contato-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 24px; }
     .contato-icone {
-      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-      background: rgba(15,81,50,.1);
-      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+      background: var(--verde-xs); display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
     }
-    .contato-item h4 { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.85rem; color: var(--cinza-escuro); margin-bottom: 2px; }
-    .contato-item p { font-size: 0.8rem; color: var(--cinza); }
-    .form-contato { background: var(--branco); border-radius: var(--radius); padding: 32px; box-shadow: var(--sombra); }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .form-campo { display: flex; flex-direction: column; gap: 6px; }
-    .form-campo.full { grid-column: 1 / -1; }
-    .form-campo label { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.78rem; color: var(--cinza-escuro); }
-    .form-campo input,
-    .form-campo textarea,
-    .form-campo select {
-      border: 1.5px solid #e0e0e0; border-radius: 10px;
-      padding: 12px 14px; font-size: 0.9rem; font-family: 'Inter', sans-serif;
-      color: var(--cinza-escuro); outline: none; background: var(--branco);
-      transition: border-color var(--transition);
+    .contato-item-lbl { font-weight: 700; font-size: .85rem; color: var(--ink); margin-bottom: 2px; }
+    .contato-item-val { font-size: .88rem; color: #4A5E50; }
+    .social-row { display: flex; gap: 10px; margin-top: 28px; }
+    .social-btn {
+      width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: .95rem;
+      transition: all .2s; background: #fff; color: var(--ink);
     }
-    .form-campo input:focus,
-    .form-campo textarea:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(15,81,50,.08); }
-    .form-campo textarea { resize: vertical; min-height: 110px; }
-    .btn-form {
-      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.95rem;
-      background: var(--verde); color: var(--branco);
-      padding: 14px 28px; border-radius: 12px; border: none; cursor: pointer;
-      display: flex; align-items: center; gap: 8px;
-      transition: all var(--transition); box-shadow: var(--sombra);
-      margin-top: 8px;
-    }
-    .btn-form:hover { background: var(--verde-light); transform: translateY(-1px); }
-    #msg-form { font-size: 0.85rem; margin-top: 10px; display: none; }
-    #msg-form.ok { color: #0F5132; }
-    #msg-form.erro { color: var(--cinza-escuro); }
+    .social-btn:hover { background: var(--verde); border-color: var(--verde); color: #fff; transform: translateY(-2px); }
 
-    /* ── Rodapé ──────────────────────────────────────────────────────────── */
+    /* Form */
+    .form-contato { background: var(--cinza); border-radius: 20px; padding: 36px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+    .campo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .campo label { font-size: .72rem; font-weight: 700; color: var(--cinza-m); text-transform: uppercase; letter-spacing: .05em; }
+    .campo input, .campo select, .campo textarea {
+      border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 12px 16px; font-size: .92rem; font-family: 'Inter', sans-serif;
+      background: #fff; color: var(--ink); outline: none; transition: border-color .15s;
+    }
+    .campo input:focus, .campo select:focus, .campo textarea:focus { border-color: var(--verde); }
+    .campo textarea { resize: vertical; min-height: 110px; }
+    .form-msg { font-size: .82rem; margin-top: 12px; display: none; }
+    .form-msg.ok { color: var(--verde); } .form-msg.err { color: #C0392B; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════════════════════════════ */
     footer {
-      background: var(--cinza-escuro);
-      color: rgba(255,255,255,.75);
-      padding: 60px 0 24px;
+      background: var(--verde-d); padding: 72px 0 0;
     }
     .footer-grid {
-      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 48px; margin-bottom: 40px;
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+      padding-bottom: 56px; border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .footer-logo { height: 48px; object-fit: contain; margin-bottom: 14px; filter: brightness(0) invert(1); opacity: .8; }
-    .footer-desc { font-size: 0.82rem; line-height: 1.7; margin-bottom: 20px; }
-    .footer-social { display: flex; gap: 10px; }
-    .footer-social a {
-      width: 36px; height: 36px; border-radius: 8px;
-      background: rgba(255,255,255,.1);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; transition: background var(--transition);
+    @media(max-width: 860px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; } }
+    @media(max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand p { font-size: .85rem; color: rgba(255,255,255,.55); line-height: 1.8; margin-top: 16px; max-width: 280px; }
+    .footer-brand-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1rem; color: #fff;
     }
-    .footer-social a:hover { background: var(--ouro); color: var(--cinza-escuro); }
-    .footer-col h4 {
-      font-family: 'Poppins', sans-serif; font-weight: 700;
-      font-size: 0.85rem; color: var(--branco); margin-bottom: 16px;
-      padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.1);
-    }
-    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-    .footer-col ul li a {
-      font-size: 0.82rem; color: rgba(255,255,255,.65);
-      transition: color var(--transition);
-    }
-    .footer-col ul li a:hover { color: var(--ouro); }
+    .footer-brand-logo img { height: 32px; }
+    .footer-col h4 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: .82rem; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col li a { font-size: .88rem; color: rgba(255,255,255,.65); transition: color .15s; }
+    .footer-col li a:hover { color: var(--ouro); }
     .footer-bottom {
-      border-top: 1px solid rgba(255,255,255,.1);
-      padding-top: 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 10px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 12px; padding: 20px 0;
     }
-    .footer-bottom p { font-size: 0.78rem; }
-    .footer-bottom a { color: var(--ouro); }
+    .footer-bottom p { font-size: .78rem; color: rgba(255,255,255,.35); }
+    .footer-selos { display: flex; gap: 8px; }
+    .selo {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px; padding: 4px 10px; font-size: .65rem; font-weight: 700;
+      letter-spacing: .06em; color: rgba(255,255,255,.4); text-transform: uppercase;
+    }
 
-    /* ── WhatsApp flutuante ──────────────────────────────────────────────── */
+    /* ══════════════════════════════════════════════════════════════════════
+       WHATSAPP FLOAT
+    ══════════════════════════════════════════════════════════════════════ */
     .wpp-float {
-      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      position: fixed; bottom: 28px; right: 28px; z-index: 90;
       width: 58px; height: 58px; border-radius: 50%;
-      background: #25D366;
-      box-shadow: 0 4px 20px rgba(37,211,102,.45);
+      background: #25D366; color: #fff; font-size: 1.5rem;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 1.6rem;
-      animation: pulso 2.5s infinite;
-      transition: transform .2s;
+      box-shadow: 0 6px 24px rgba(37,211,102,.45);
+      transition: transform .2s, box-shadow .2s;
     }
-    .wpp-float:hover { transform: scale(1.1); animation: none; }
-    @keyframes pulso {
-      0%,100% { box-shadow: 0 4px 20px rgba(37,211,102,.45); }
-      50% { box-shadow: 0 4px 32px rgba(37,211,102,.7), 0 0 0 8px rgba(37,211,102,.12); }
+    .wpp-float:hover { transform: scale(1.08); box-shadow: 0 10px 32px rgba(37,211,102,.55); }
+    .wpp-float::before {
+      content: ''; position: absolute; inset: -4px; border-radius: 50%;
+      border: 2px solid rgba(37,211,102,.4); animation: wpp-ring 2.5s infinite;
     }
+    @keyframes wpp-ring { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.5);opacity:0} }
 
-    /* ── Scroll reveal ───────────────────────────────────────────────────── */
-    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .65s ease, transform .65s ease; }
-    .reveal.visivel { opacity: 1; transform: translateY(0); }
-
-    /* ── Mobile menu ─────────────────────────────────────────────────────── */
-    .nav-mobile {
-      display: none;
-      flex-direction: column;
-      background: var(--branco);
-      border-top: 1px solid rgba(15,81,50,.1);
-      padding: 12px 24px 16px;
-      gap: 4px;
+    /* ══════════════════════════════════════════════════════════════════════
+       SCROLL TOP
+    ══════════════════════════════════════════════════════════════════════ */
+    .scroll-top {
+      position: fixed; bottom: 28px; left: 28px; z-index: 90;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--verde); color: #fff; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(15,81,50,.3);
+      opacity: 0; pointer-events: none; transition: opacity .25s, transform .2s;
     }
-    .nav-mobile.aberto { display: flex; }
-    .nav-mobile a {
-      padding: 10px 12px; border-radius: 8px;
-      font-weight: 500; font-size: 0.92rem;
-      transition: background var(--transition);
-    }
-    .nav-mobile a:hover { background: var(--cinza-claro); }
-
-    /* ── Responsive ──────────────────────────────────────────────────────── */
-    @media (max-width: 900px) {
-      nav { display: none; }
-      .btn-header { display: none; }
-      .menu-mobile { display: flex; flex-direction: column; margin-left: auto; }
-      .hero-inner { grid-template-columns: 1fr; text-align: center; }
-      .hero-botoes { justify-content: center; }
-      .hero-dashboard { display: none; }
-      .sobre-inner,
-      .beneficios-inner,
-      .contato-inner { grid-template-columns: 1fr; }
-      .numeros-grid { grid-template-columns: 1fr 1fr; }
-      .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
-      .card-depoimento { flex: 0 0 calc(80% - 12px); }
-    }
-    @media (max-width: 600px) {
-      section { padding: 60px 0; }
-      .numeros-grid { grid-template-columns: 1fr 1fr; }
-      .footer-grid { grid-template-columns: 1fr; }
-      .form-grid { grid-template-columns: 1fr; }
-      .card-depoimento { flex: 0 0 90%; }
-      .cta-botoes { flex-direction: column; align-items: center; }
-    }
+    .scroll-top.vis { opacity: 1; pointer-events: all; }
+    .scroll-top:hover { transform: translateY(-3px); }
   </style>
 </head>
 <body>
 
-<!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header id="header">
+<!-- ═══ HEADER ════════════════════════════════════════════════════════════════ -->
+<header class="header" id="header">
   <div class="header-inner">
-    <img src="identidade-visual/logo-oficial.png" alt="Helmigui" class="header-logo"
-         onerror="this.style.display='none';document.getElementById('logo-txt').style.display='flex'" />
-    <div id="logo-txt" class="header-logo-text" style="display:none">
-      HELMIGUI<span>Serviços Financeiros</span>
-    </div>
-
+    <a href="/" class="header-logo">
+      <img src="identidade-visual/logo-oficial.png" alt="Helmigui" onerror="this.style.display='none'"/>
+      <div class="logo-text">Helmigui<span>Serviços Financeiros</span></div>
+    </a>
     <nav id="nav-desktop">
-      <a href="#inicio">Início</a>
-      <a href="#servicos">Serviços</a>
-      <a href="#diferenciais">Benefícios</a>
-      <a href="#sobre">Sobre Nós</a>
-      <a href="#depoimentos">Depoimentos</a>
-      <a href="#contato">Contato</a>
+      <a href="#servicos"     class="nav-link">Serviços</a>
+      <a href="#diferenciais" class="nav-link">Diferenciais</a>
+      <a href="#como-funciona" class="nav-link">Como Funciona</a>
+      <a href="#depoimentos"  class="nav-link">Clientes</a>
+      <a href="#contato"      class="nav-link">Contato</a>
     </nav>
-
-    <button class="btn-header" onclick="scrollParaContato()">Solicitar Diagnóstico Gratuito</button>
-    <button class="menu-mobile" onclick="toggleNavMobile()" aria-label="Menu">
+    <div class="header-cta">
+      <a href="app.html" class="btn btn-prim">Área do Cliente</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
   </div>
-  <nav class="nav-mobile" id="nav-mobile">
-    <a href="#inicio" onclick="fecharNavMobile()">Início</a>
-    <a href="#servicos" onclick="fecharNavMobile()">Serviços</a>
-    <a href="#diferenciais" onclick="fecharNavMobile()">Benefícios</a>
-    <a href="#sobre" onclick="fecharNavMobile()">Sobre Nós</a>
-    <a href="#depoimentos" onclick="fecharNavMobile()">Depoimentos</a>
-    <a href="#contato" onclick="fecharNavMobile()">Contato</a>
-    <a href="#contato" onclick="fecharNavMobile()" style="background:var(--ouro);color:var(--cinza-escuro);font-weight:700;text-align:center;margin-top:8px;">Diagnóstico Gratuito</a>
-  </nav>
+  <div class="nav-mobile" id="nav-mobile">
+    <a href="#servicos"      class="nav-link" onclick="toggleMenu()">Serviços</a>
+    <a href="#diferenciais"  class="nav-link" onclick="toggleMenu()">Diferenciais</a>
+    <a href="#como-funciona" class="nav-link" onclick="toggleMenu()">Como Funciona</a>
+    <a href="#depoimentos"   class="nav-link" onclick="toggleMenu()">Clientes</a>
+    <a href="#contato"       class="nav-link" onclick="toggleMenu()">Contato</a>
+    <a href="app.html" class="btn btn-prim">Área do Cliente →</a>
+  </div>
 </header>
 
-<!-- ── Hero ───────────────────────────────────────────────────────────────── -->
-<section id="inicio">
-  <div class="hero-bg-grid"></div>
-  <div class="hero-glow"></div>
-  <div class="hero-inner container">
-    <div>
-      <div class="hero-badge">✦ Especialistas em BPO Financeiro</div>
-      <h1 class="hero-titulo">
-        Gestão Financeira <em>Inteligente</em> para Empresas que Querem Crescer
-      </h1>
-      <p class="hero-subtitulo">
-        Organizamos seu financeiro, reduzimos custos e entregamos informações estratégicas para que sua empresa cresça com segurança e previsibilidade.
+<!-- ═══ HERO ══════════════════════════════════════════════════════════════════ -->
+<section class="hero" id="inicio">
+  <div class="hero-decor"></div>
+  <div class="hero-decor-2"></div>
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-label">
+        <span class="hero-label-dot"></span>
+        <span>BPO Financeiro Premium</span>
+      </div>
+      <h1>Gestão financeira que <em>transforma</em> empresas</h1>
+      <p class="hero-desc">
+        Assumimos o controle financeiro da sua empresa com tecnologia, metodologia e expertise.
+        Você foca no negócio. A gente cuida dos números.
       </p>
-      <div class="hero-botoes">
-        <button class="btn-primario" onclick="scrollParaContato()">
-          📊 Solicitar Diagnóstico
-        </button>
-        <a class="btn-outline" href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20conhecer%20os%20serviços%20da%20Helmigui%20Serviços%20Financeiros." target="_blank">
-          💬 Falar no WhatsApp
-        </a>
+      <div class="hero-btns">
+        <a href="#contato" class="btn btn-ouro btn-lg">Solicitar Consultoria Gratuita</a>
+        <a href="#servicos" class="btn btn-ghost btn-lg">Conhecer Serviços</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-num" data-target="200">0</div>
+          <div class="hero-stat-lbl">Empresas atendidas</div>
+        </div>
+        <div>
+          <div class="hero-stat-num" data-target="98" data-suffix="%">0</div>
+          <div class="hero-stat-lbl">Taxa de satisfação</div>
+        </div>
+        <div>
+          <div class="hero-stat-num" data-target="12" data-suffix=" anos">0</div>
+          <div class="hero-stat-lbl">De experiência</div>
+        </div>
       </div>
     </div>
 
-    <!-- Dashboard financeiro -->
-    <div class="hero-dashboard">
-      <div class="dash-header">
-        <span class="dash-titulo">📊 Dashboard Financeiro</span>
-        <span class="dash-badge">● Ao vivo</span>
-      </div>
-      <div class="dash-cards">
-        <div class="dash-card">
-          <div class="dash-card-label">Receita Mensal</div>
-          <div class="dash-card-valor verde">R$ 247k</div>
-          <div class="dash-card-var up">↑ 18% este mês</div>
+    <!-- Dashboard card decorativo -->
+    <div class="hero-card">
+      <div class="hero-card-title">Painel Financeiro — Julho 2025</div>
+      <div class="kpi-row">
+        <div class="kpi-box">
+          <div class="kpi-box-lbl">Entradas</div>
+          <div class="kpi-box-val pos">R$ 284k</div>
         </div>
-        <div class="dash-card">
-          <div class="dash-card-label">Fluxo de Caixa</div>
-          <div class="dash-card-valor ouro">R$ 89k</div>
-          <div class="dash-card-var up">↑ 12% positivo</div>
+        <div class="kpi-box">
+          <div class="kpi-box-lbl">Saídas</div>
+          <div class="kpi-box-val neg">R$ 196k</div>
         </div>
-        <div class="dash-card">
-          <div class="dash-card-label">Contas a Pagar</div>
-          <div class="dash-card-valor branco">R$ 31k</div>
-          <div class="dash-card-var down">3 vencendo hoje</div>
+        <div class="kpi-box">
+          <div class="kpi-box-lbl">Saldo</div>
+          <div class="kpi-box-val pos">R$ 88k</div>
         </div>
-        <div class="dash-card">
-          <div class="dash-card-label">Inadimplência</div>
-          <div class="dash-card-valor verde">2,1%</div>
-          <div class="dash-card-var up">↓ -0.8% vs mês ant.</div>
+        <div class="kpi-box">
+          <div class="kpi-box-lbl">Margem</div>
+          <div class="kpi-box-val pos">+31%</div>
         </div>
       </div>
-      <div class="dash-grafico">
-        <div class="dash-barra" style="height:40%"></div>
-        <div class="dash-barra alt" style="height:55%"></div>
-        <div class="dash-barra" style="height:35%"></div>
-        <div class="dash-barra alt" style="height:70%"></div>
-        <div class="dash-barra" style="height:50%"></div>
-        <div class="dash-barra alt" style="height:85%"></div>
-        <div class="dash-barra" style="height:60%"></div>
-        <div class="dash-barra alt" style="height:90%"></div>
-        <div class="dash-barra" style="height:75%"></div>
-        <div class="dash-barra alt" style="height:95%"></div>
+      <div class="chart-bars">
+        <div class="chart-bar bar-ent" style="height:40%"></div><div class="chart-bar bar-sai" style="height:28%"></div>
+        <div class="chart-bar bar-ent" style="height:55%"></div><div class="chart-bar bar-sai" style="height:42%"></div>
+        <div class="chart-bar bar-ent" style="height:48%"></div><div class="chart-bar bar-sai" style="height:35%"></div>
+        <div class="chart-bar bar-ent" style="height:70%"></div><div class="chart-bar bar-sai" style="height:52%"></div>
+        <div class="chart-bar bar-ent" style="height:62%"></div><div class="chart-bar bar-sai" style="height:44%"></div>
+        <div class="chart-bar bar-ent" style="height:85%"></div><div class="chart-bar bar-sai" style="height:61%"></div>
+      </div>
+      <div class="chart-labels">
+        <div class="chart-label">Fev</div><div class="chart-label">Mar</div>
+        <div class="chart-label">Abr</div><div class="chart-label">Mai</div>
+        <div class="chart-label">Jun</div><div class="chart-label">Jul</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Serviços ────────────────────────────────────────────────────────────── -->
-<section id="servicos">
+<!-- ═══ LOGOS ════════════════════════════════════════════════════════════════ -->
+<div class="logos-strip">
+  <div class="logos-inner">
+    <span class="logos-lbl">Empresas que confiam</span>
+    <div class="logos-items">
+      <span class="logo-item">CONSTRUTORA ALPHA</span>
+      <span class="logo-item">MED CLÍNICAS</span>
+      <span class="logo-item">LOGTECH BR</span>
+      <span class="logo-item">GRUPO FARMA</span>
+      <span class="logo-item">TECH SOLUTIONS</span>
+      <span class="logo-item">VAREJO PRO</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SERVIÇOS ════════════════════════════════════════════════════════════ -->
+<section class="section servicos" id="servicos">
   <div class="container">
-    <div class="text-center reveal">
-      <p class="secao-eyebrow">O que fazemos</p>
-      <h2 class="secao-titulo">Soluções Financeiras <em>Completas</em></h2>
-      <p class="secao-subtitulo">Desde a organização do dia a dia financeiro até relatórios estratégicos para tomada de decisão.</p>
+    <div class="servicos-header reveal">
+      <span class="eyebrow">O que fazemos</span>
+      <h2 class="heading-lg">Soluções financeiras completas para sua empresa</h2>
+      <p class="lead" style="margin-top:14px">Do operacional ao estratégico, cuidamos de toda a gestão financeira para você ter visibilidade e controle total.</p>
     </div>
     <div class="servicos-grid">
-      <div class="card-servico reveal">
-        <div class="card-servico-icone">💰</div>
+      <div class="servico-card reveal">
+        <div class="servico-icon">💼</div>
+        <h3>Gestão Financeira (BPO)</h3>
+        <p>Terceirizamos toda a operação financeira da sua empresa — contas, pagamentos, cobranças e conciliações — com equipe especializada e processos auditáveis.</p>
+        <span class="servico-link">Saiba mais →</span>
+      </div>
+      <div class="servico-card reveal">
+        <div class="servico-icon">📊</div>
         <h3>Fluxo de Caixa</h3>
-        <p>Controle completo das entradas e saídas com visibilidade em tempo real da saúde financeira da sua empresa.</p>
-        <span class="card-servico-link">Saiba mais →</span>
+        <p>Controle em tempo real das entradas e saídas. Projeções semanais, mensais e anuais para você tomar decisões com base em dados confiáveis.</p>
+        <span class="servico-link">Saiba mais →</span>
       </div>
-      <div class="card-servico reveal">
-        <div class="card-servico-icone">📤</div>
+      <div class="servico-card reveal">
+        <div class="servico-icon">📤</div>
         <h3>Contas a Pagar</h3>
-        <p>Organização, programação e controle de todas as obrigações financeiras para eliminar atrasos e juros desnecessários.</p>
-        <span class="card-servico-link">Saiba mais →</span>
+        <p>Gestão completa do ciclo de pagamentos: cadastro de fornecedores, aprovações, programação e pagamento. Zero atraso, zero multa, zero retrabalho.</p>
+        <span class="servico-link">Saiba mais →</span>
       </div>
-      <div class="card-servico reveal">
-        <div class="card-servico-icone">📥</div>
+      <div class="servico-card reveal">
+        <div class="servico-icon">📥</div>
         <h3>Contas a Receber</h3>
-        <p>Controle eficiente de recebimentos, cobranças e inadimplência para maximizar a entrada de caixa.</p>
-        <span class="card-servico-link">Saiba mais →</span>
+        <p>Controle da inadimplência, emissão de boletos, cobrança ativa e conciliação de recebimentos. Seu capital de giro sempre otimizado.</p>
+        <span class="servico-link">Saiba mais →</span>
       </div>
-      <div class="card-servico reveal">
-        <div class="card-servico-icone">🏦</div>
+      <div class="servico-card reveal">
+        <div class="servico-icon">🏦</div>
         <h3>Conciliação Bancária</h3>
-        <p>Maior segurança e transparência com a conferência sistemática entre registros internos e extratos bancários.</p>
-        <span class="card-servico-link">Saiba mais →</span>
+        <p>Conciliação automática e manual de extratos bancários, identificação de divergências e manutenção da integridade contábil dos seus registros.</p>
+        <span class="servico-link">Saiba mais →</span>
       </div>
-      <div class="card-servico reveal">
-        <div class="card-servico-icone">📈</div>
+      <div class="servico-card reveal">
+        <div class="servico-icon">📈</div>
         <h3>Relatórios Gerenciais</h3>
-        <p>Indicadores e dashboards estratégicos para que os sócios tomem decisões com dados precisos e confiáveis.</p>
-        <span class="card-servico-link">Saiba mais →</span>
-      </div>
-      <div class="card-servico reveal">
-        <div class="card-servico-icone">🎯</div>
-        <h3>Planejamento Financeiro</h3>
-        <p>Estratégias personalizadas para crescimento sustentável, com metas, orçamento e acompanhamento contínuo.</p>
-        <span class="card-servico-link">Saiba mais →</span>
+        <p>DRE, Balanço Patrimonial, Fluxo de Caixa Projetado e dashboards executivos. Informação financeira clara para decisões estratégicas ágeis.</p>
+        <span class="servico-link">Saiba mais →</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Diferenciais ────────────────────────────────────────────────────────── -->
-<section id="diferenciais">
+<!-- ═══ DIFERENCIAIS + NÚMEROS ════════════════════════════════════════════════ -->
+<section class="section diferenciais" id="diferenciais">
   <div class="container">
-    <div class="text-center reveal">
-      <p class="secao-eyebrow">Nossos diferenciais</p>
-      <h2 class="secao-titulo">Por que escolher a <em>Helmigui?</em></h2>
-    </div>
-    <div class="diferenciais-grid">
-      <div class="card-diferencial reveal">
-        <div class="diferencial-check">✓</div>
-        <div>
-          <h4>Atendimento Personalizado</h4>
-          <p>Cada cliente tem um consultor dedicado que conhece profundamente o seu negócio.</p>
-        </div>
-      </div>
-      <div class="card-diferencial reveal">
-        <div class="diferencial-check">✓</div>
-        <div>
-          <h4>Processos Organizados</h4>
-          <p>Metodologia estruturada para padronizar e automatizar a rotina financeira da sua empresa.</p>
-        </div>
-      </div>
-      <div class="card-diferencial reveal">
-        <div class="diferencial-check">✓</div>
-        <div>
-          <h4>Relatórios Estratégicos</h4>
-          <p>Informações claras e objetivas para suportar decisões de negócio com segurança.</p>
-        </div>
-      </div>
-      <div class="card-diferencial reveal">
-        <div class="diferencial-check">✓</div>
-        <div>
-          <h4>Redução de Custos</h4>
-          <p>Identificação de desperdícios e otimização da estrutura de custos para aumentar a margem.</p>
-        </div>
-      </div>
-      <div class="card-diferencial reveal">
-        <div class="diferencial-check">✓</div>
-        <div>
-          <h4>Segurança das Informações</h4>
-          <p>Proteção total dos dados financeiros com processos rigorosos de confidencialidade e LGPD.</p>
-        </div>
-      </div>
-      <div class="card-diferencial reveal">
-        <div class="diferencial-check">✓</div>
-        <div>
-          <h4>Foco no Crescimento do Cliente</h4>
-          <p>Nossa missão é que cada cliente cresça mais e melhor com o suporte da Helmigui.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Números ─────────────────────────────────────────────────────────────── -->
-<section id="numeros">
-  <div class="container">
-    <div class="numeros-grid">
-      <div class="numero-item reveal">
-        <span class="numero-valor" data-alvo="100" data-prefixo="+" data-sufixo="">+100</span>
-        <span class="numero-label">Empresas Atendidas</span>
-      </div>
-      <div class="numero-item reveal">
-        <span class="numero-valor" data-alvo="10" data-prefixo="+R$ " data-sufixo=" Mi">+R$ 10 Mi</span>
-        <span class="numero-label">Gerenciados</span>
-      </div>
-      <div class="numero-item reveal">
-        <span class="numero-valor" data-alvo="98" data-prefixo="" data-sufixo="%">98%</span>
-        <span class="numero-label">Taxa de Satisfação</span>
-      </div>
-      <div class="numero-item reveal">
-        <span class="numero-valor" data-alvo="24" data-prefixo="" data-sufixo="h">24h</span>
-        <span class="numero-label">Suporte ao Cliente</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Como funciona ───────────────────────────────────────────────────────── -->
-<section id="como-funciona">
-  <div class="container">
-    <div class="text-center reveal">
-      <p class="secao-eyebrow">Metodologia</p>
-      <h2 class="secao-titulo">Como <em>Funciona</em></h2>
-      <p class="secao-subtitulo">Um processo claro e eficiente para transformar a gestão financeira da sua empresa.</p>
-    </div>
-    <div class="timeline">
-      <div class="timeline-item">
-        <div class="timeline-num">1</div>
-        <div class="timeline-conteudo">
-          <h4>Diagnóstico Financeiro</h4>
-          <p>Analisamos toda a situação financeira atual da empresa — fluxo de caixa, dívidas, recebimentos e estrutura de custos.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-num">2</div>
-        <div class="timeline-conteudo">
-          <h4>Mapeamento dos Processos</h4>
-          <p>Identificamos gargalos, falhas e oportunidades de melhoria em todos os processos financeiros.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-num">3</div>
-        <div class="timeline-conteudo">
-          <h4>Implementação</h4>
-          <p>Estruturamos os processos, implantamos as ferramentas e treinamos a equipe para garantir a execução.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-num">4</div>
-        <div class="timeline-conteudo">
-          <h4>Monitoramento Contínuo</h4>
-          <p>Acompanhamos os indicadores diariamente e interagimos com a equipe para manter tudo sob controle.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-num">5</div>
-        <div class="timeline-conteudo">
-          <h4>Relatórios Estratégicos</h4>
-          <p>Entregamos relatórios mensais com análises e recomendações para que o empresário tome decisões com clareza.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Sobre ───────────────────────────────────────────────────────────────── -->
-<section id="sobre">
-  <div class="container">
-    <div class="sobre-inner">
-      <div class="sobre-img-wrap reveal">
-        <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="20" y="100" width="20" height="40" fill="rgba(212,175,55,.4)" rx="3"/>
-          <rect x="50" y="70" width="20" height="70" fill="rgba(212,175,55,.6)" rx="3"/>
-          <rect x="80" y="50" width="20" height="90" fill="rgba(212,175,55,.8)" rx="3"/>
-          <rect x="110" y="30" width="20" height="110" fill="rgba(212,175,55,.9)" rx="3"/>
-          <rect x="140" y="15" width="20" height="125" fill="rgba(212,175,55,1)" rx="3"/>
-          <polyline points="30,100 60,70 90,50 120,30 150,15" stroke="rgba(255,255,255,.6)" stroke-width="2" fill="none"/>
-        </svg>
-        <div class="sobre-badge">🏆 Fundada em 2020</div>
-      </div>
-      <div class="sobre-texto reveal">
-        <p class="secao-eyebrow">Quem somos</p>
-        <h2 class="secao-titulo">A <em>Helmigui</em> Serviços Financeiros</h2>
-        <p>A Helmigui Serviços Financeiros nasceu com a missão de ajudar empresas a organizarem suas finanças e tomarem decisões estratégicas através de processos eficientes, tecnologia e acompanhamento especializado.</p>
-        <p>Acreditamos que toda empresa merece ter acesso a uma gestão financeira de qualidade, independente do porte ou segmento. Nossa equipe combina expertise financeira com tecnologia para entregar resultados reais e mensuráveis.</p>
-        <div class="sobre-stats">
-          <div class="sobre-stat"><div class="sobre-stat-num">+5 anos</div><div class="sobre-stat-txt">de experiência no mercado</div></div>
-          <div class="sobre-stat"><div class="sobre-stat-num">100%</div><div class="sobre-stat-txt">foco em resultados</div></div>
-          <div class="sobre-stat"><div class="sobre-stat-num">12</div><div class="sobre-stat-txt">especialistas na equipe</div></div>
-          <div class="sobre-stat"><div class="sobre-stat-num">3x</div><div class="sobre-stat-txt">mais crescimento médio</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Depoimentos ─────────────────────────────────────────────────────────── -->
-<section id="depoimentos">
-  <div class="container">
-    <div class="text-center reveal">
-      <p class="secao-eyebrow">O que dizem nossos clientes</p>
-      <h2 class="secao-titulo">Depoimentos <em>Reais</em></h2>
-    </div>
-    <div class="slider-wrap reveal">
-      <div class="slider-track" id="slider-track">
-        <div class="card-depoimento">
-          <div class="depo-estrelas">★★★★★</div>
-          <p class="depo-texto">"A Helmigui transformou completamente a gestão financeira da nossa empresa. Antes vivíamos no escuro; agora temos visibilidade total do fluxo de caixa e relatórios claros toda semana."</p>
-          <div class="depo-autor">
-            <div class="depo-avatar">RB</div>
-            <div><div class="depo-nome">Ricardo Borges</div><div class="depo-cargo">CEO — Construtora Borges & Filhos</div></div>
-          </div>
-        </div>
-        <div class="card-depoimento">
-          <div class="depo-estrelas">★★★★★</div>
-          <p class="depo-texto">"Reduzimos 22% dos custos operacionais no primeiro trimestre com a Helmigui. A equipe é extremamente comprometida e entende profundamente do negócio."</p>
-          <div class="depo-autor">
-            <div class="depo-avatar">AM</div>
-            <div><div class="depo-nome">Ana Marques</div><div class="depo-cargo">Diretora Financeira — Grupo AM Logística</div></div>
-          </div>
-        </div>
-        <div class="card-depoimento">
-          <div class="depo-estrelas">★★★★★</div>
-          <p class="depo-texto">"Nosso índice de inadimplência caiu de 8% para 1,5% em 6 meses. Os processos de cobrança implementados pela Helmigui são muito eficientes."</p>
-          <div class="depo-autor">
-            <div class="depo-avatar">CF</div>
-            <div><div class="depo-nome">Carlos Figueiredo</div><div class="depo-cargo">Sócio — Clínica Figueiredo</div></div>
-          </div>
-        </div>
-        <div class="card-depoimento">
-          <div class="depo-estrelas">★★★★★</div>
-          <p class="depo-texto">"O relatório gerencial mensal da Helmigui me dá confiança para tomar decisões importantes. Finalmente consigo ver a saúde real da empresa com clareza."</p>
-          <div class="depo-autor">
-            <div class="depo-avatar">PS</div>
-            <div><div class="depo-nome">Patricia Santos</div><div class="depo-cargo">Proprietária — Rede PS Varejo</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="slider-dots" id="slider-dots"></div>
-  </div>
-</section>
-
-<!-- ── Benefícios ──────────────────────────────────────────────────────────── -->
-<section id="beneficios">
-  <div class="container">
-    <div class="beneficios-inner">
-      <div class="beneficios-img reveal">
-        <div class="mini-dash">
-          <div class="mini-dash-row">
-            <span class="mini-dash-label">Controle</span>
-            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:92%"></div></div>
-            <span class="mini-dash-val">92%</span>
-          </div>
-          <div class="mini-dash-row">
-            <span class="mini-dash-label">Eficiência</span>
-            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:87%"></div></div>
-            <span class="mini-dash-val">87%</span>
-          </div>
-          <div class="mini-dash-row">
-            <span class="mini-dash-label">Lucro</span>
-            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:78%"></div></div>
-            <span class="mini-dash-val">+78%</span>
-          </div>
-          <div class="mini-dash-row">
-            <span class="mini-dash-label">Satisfação</span>
-            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:98%"></div></div>
-            <span class="mini-dash-val">98%</span>
-          </div>
-          <div class="mini-dash-row">
-            <span class="mini-dash-label">Crescimento</span>
-            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:65%"></div></div>
-            <span class="mini-dash-val">+65%</span>
-          </div>
-        </div>
-      </div>
+    <div class="diferenciais-inner">
       <div class="reveal">
-        <p class="secao-eyebrow">Benefícios reais</p>
-        <h2 class="secao-titulo">O que você ganha com a <em>Helmigui</em></h2>
-        <div class="beneficios-lista">
-          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Mais controle financeiro</h4><p>Visibilidade total de entradas, saídas e saldo em tempo real.</p></div></div>
-          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Menos retrabalho</h4><p>Processos padronizados que eliminam erros e reprocessamentos.</p></div></div>
-          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Informações em tempo real</h4><p>Dados atualizados continuamente para decisões rápidas e precisas.</p></div></div>
-          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Decisões mais inteligentes</h4><p>Relatórios gerenciais com indicadores que orientam a estratégia.</p></div></div>
-          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Crescimento sustentável</h4><p>Base financeira sólida para expandir com segurança.</p></div></div>
-          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Maior lucratividade</h4><p>Redução de custos e aumento da eficiência geram mais margem.</p></div></div>
+        <span class="eyebrow">Por que a Helmigui</span>
+        <h2 class="heading-lg" style="color:#fff;margin-bottom:16px">A expertise que a sua empresa precisa</h2>
+        <p class="lead">Mais de uma década organizando o financeiro de empresas brasileiras de todos os segmentos e portes.</p>
+        <div class="check-list">
+          <div class="check-item">Equipe de especialistas com certificação em gestão financeira</div>
+          <div class="check-item">Processos documentados, auditáveis e seguros</div>
+          <div class="check-item">Portal exclusivo do cliente com acesso em tempo real</div>
+          <div class="check-item">Relatórios gerenciais personalizados para o seu negócio</div>
+          <div class="check-item">Suporte dedicado por WhatsApp, e-mail e telefone</div>
+          <div class="check-item">Redução média de 30% nos custos operacionais financeiros</div>
+        </div>
+        <div style="margin-top:32px">
+          <a href="#contato" class="btn btn-ouro btn-lg">Falar com um especialista</a>
+        </div>
+      </div>
+      <div class="numeros-grid reveal">
+        <div class="numero-box">
+          <div class="numero-num" data-target="200">0</div>
+          <div class="numero-lbl">Empresas<br>atendidas</div>
+        </div>
+        <div class="numero-box">
+          <div class="numero-num" data-target="12" data-suffix="+"">0</div>
+          <div class="numero-lbl">Anos de<br>experiência</div>
+        </div>
+        <div class="numero-box">
+          <div class="numero-num" data-target="98" data-suffix="%">0</div>
+          <div class="numero-lbl">Satisfação<br>dos clientes</div>
+        </div>
+        <div class="numero-box">
+          <div class="numero-num" data-target="30" data-suffix="%">0</div>
+          <div class="numero-lbl">Redução de<br>custos médio</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── CTA ─────────────────────────────────────────────────────────────────── -->
-<section id="cta">
-  <div class="container reveal">
-    <h2 class="cta-titulo">Pronto para Transformar a Gestão Financeira da Sua Empresa?</h2>
-    <p class="cta-sub">Agende agora um diagnóstico gratuito e descubra o potencial financeiro do seu negócio.</p>
-    <div class="cta-botoes">
-      <button class="btn-verde" onclick="scrollParaContato()">📊 Solicitar Diagnóstico Gratuito</button>
-      <a class="btn-wpp" href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20conhecer%20os%20serviços%20da%20Helmigui%20Serviços%20Financeiros." target="_blank">
+<!-- ═══ COMO FUNCIONA ════════════════════════════════════════════════════════ -->
+<section class="section como" id="como-funciona">
+  <div class="container">
+    <div class="como-header reveal">
+      <span class="eyebrow">Processo</span>
+      <h2 class="heading-lg">Como funciona a parceria</h2>
+      <p class="lead" style="margin-top:12px">Simples, transparente e sem burocracia. Em poucos passos seu financeiro estará em mãos especializadas.</p>
+    </div>
+    <div class="etapas">
+      <div class="etapa reveal">
+        <div class="etapa-num">1</div>
+        <div class="etapa-body">
+          <h3>Diagnóstico Gratuito</h3>
+          <p>Analisamos a situação financeira atual da sua empresa sem compromisso. Identificamos gargalos, riscos e oportunidades de melhoria no prazo de 48h.</p>
+        </div>
+      </div>
+      <div class="etapa reveal">
+        <div class="etapa-num">2</div>
+        <div class="etapa-body">
+          <h3>Proposta Personalizada</h3>
+          <p>Desenvolvemos uma solução sob medida para o porte e segmento da sua empresa, com escopo claro, prazos definidos e preço justo.</p>
+        </div>
+      </div>
+      <div class="etapa reveal">
+        <div class="etapa-num">3</div>
+        <div class="etapa-body">
+          <h3>Implantação e Migração</h3>
+          <p>Nossa equipe assume a operação financeira com transição cuidadosa. Importamos histórico, organizamos processos e treinamos seus colaboradores.</p>
+        </div>
+      </div>
+      <div class="etapa reveal">
+        <div class="etapa-num">4</div>
+        <div class="etapa-body">
+          <h3>Operação e Relatórios</h3>
+          <p>Gestão contínua com acesso em tempo real pelo portal exclusivo. Reuniões mensais de resultado e relatórios gerenciais estratégicos.</p>
+        </div>
+      </div>
+      <div class="etapa reveal">
+        <div class="etapa-num">✓</div>
+        <div class="etapa-body">
+          <h3>Sua empresa no controle</h3>
+          <p>Com as finanças organizadas, você tem clareza para tomar decisões, acessar crédito com mais facilidade e focar no crescimento do negócio.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DEPOIMENTOS ══════════════════════════════════════════════════════════ -->
+<section class="section depoimentos" id="depoimentos">
+  <div class="container">
+    <div class="depo-header reveal">
+      <span class="eyebrow">Depoimentos</span>
+      <h2 class="heading-lg">O que nossos clientes dizem</h2>
+      <p class="lead" style="margin-top:12px">Empresas reais, resultados reais. Veja como a Helmigui transformou a gestão financeira dos nossos clientes.</p>
+    </div>
+    <div class="depo-slider-wrap reveal">
+      <div class="depo-slider" id="depo-slider">
+        <div class="depo-card">
+          <div class="stars">★★★★★</div>
+          <p class="depo-texto">"A Helmigui transformou nossa gestão financeira. Antes vivíamos no caos, sem saber se o caixa fecharia no fim do mês. Hoje temos previsibilidade total e tomamos decisões com confiança."</p>
+          <div class="depo-autor">
+            <div class="depo-avatar">CR</div>
+            <div><div class="depo-nome">Carlos Roberto</div><div class="depo-empresa">CEO · Construtora Alpha</div></div>
+          </div>
+        </div>
+        <div class="depo-card">
+          <div class="stars">★★★★★</div>
+          <p class="depo-texto">"Reduzimos 35% dos custos operacionais financeiros no primeiro trimestre. A equipe da Helmigui é extremamente competente e o atendimento é impecável. Melhor investimento que fizemos."</p>
+          <div class="depo-autor">
+            <div class="depo-avatar">AS</div>
+            <div><div class="depo-nome">Ana Silva</div><div class="depo-empresa">Diretora Financeira · MedClínicas</div></div>
+          </div>
+        </div>
+        <div class="depo-card">
+          <div class="stars">★★★★★</div>
+          <p class="depo-texto">"O portal do cliente é excelente — consigo ver o fluxo de caixa, aprovar pagamentos e acompanhar relatórios em tempo real. Profissionalismo em todos os detalhes."</p>
+          <div class="depo-autor">
+            <div class="depo-avatar">MF</div>
+            <div><div class="depo-nome">Marcos Ferreira</div><div class="depo-empresa">Sócio · LogTech Brasil</div></div>
+          </div>
+        </div>
+        <div class="depo-card">
+          <div class="stars">★★★★★</div>
+          <p class="depo-texto">"Nossa inadimplência caiu de 18% para 3% em 6 meses. A gestão de contas a receber da Helmigui é simplesmente outra categoria. Recomendo para qualquer empresário que leva o negócio a sério."</p>
+          <div class="depo-autor">
+            <div class="depo-avatar">PL</div>
+            <div><div class="depo-nome">Patricia Lima</div><div class="depo-empresa">Proprietária · Varejo Pro</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="depo-nav" id="depo-nav"></div>
+  </div>
+</section>
+
+<!-- ═══ CTA BANNER ══════════════════════════════════════════════════════════ -->
+<div class="cta-banner">
+  <div class="container">
+    <h2>Pronto para ter um financeiro de alta performance?</h2>
+    <p>Faça um diagnóstico gratuito e descubra como podemos ajudar sua empresa a crescer com segurança.</p>
+    <div class="cta-btns">
+      <a href="#contato" class="btn btn-verde-dark btn-lg">Agendar Diagnóstico Gratuito</a>
+      <a href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20serviços%20da%20Helmigui." target="_blank" class="btn btn-lg" style="background:#25D366;color:#fff">
         💬 Falar no WhatsApp
       </a>
     </div>
   </div>
-</section>
+</div>
 
-<!-- ── Contato ─────────────────────────────────────────────────────────────── -->
-<section id="contato">
+<!-- ═══ CONTATO ══════════════════════════════════════════════════════════════ -->
+<section class="section contato" id="contato">
   <div class="container">
-    <div class="text-center reveal">
-      <p class="secao-eyebrow">Fale conosco</p>
-      <h2 class="secao-titulo">Entre em <em>Contato</em></h2>
-    </div>
     <div class="contato-inner">
       <div class="reveal">
-        <h3>Informações de Contato</h3>
+        <span class="eyebrow">Fale conosco</span>
+        <h2 class="heading-lg">Vamos conversar sobre seu financeiro?</h2>
+        <p class="lead" style="margin-top:12px;margin-bottom:36px">Nossa equipe está pronta para analisar o seu negócio e apresentar a melhor solução.</p>
         <div class="contato-item">
-          <div class="contato-icone">📱</div>
-          <div><h4>WhatsApp</h4><p>(11) 99999-9999</p></div>
+          <div class="contato-icone">📞</div>
+          <div>
+            <div class="contato-item-lbl">Telefone / WhatsApp</div>
+            <div class="contato-item-val">(11) 99999-9999</div>
+          </div>
         </div>
         <div class="contato-item">
           <div class="contato-icone">📧</div>
-          <div><h4>E-mail</h4><p>contato@helmigui.com.br</p></div>
+          <div>
+            <div class="contato-item-lbl">E-mail</div>
+            <div class="contato-item-val">contato@helmigui.com.br</div>
+          </div>
         </div>
         <div class="contato-item">
           <div class="contato-icone">📍</div>
-          <div><h4>Localização</h4><p>São Paulo, SP — Brasil</p></div>
+          <div>
+            <div class="contato-item-lbl">Localização</div>
+            <div class="contato-item-val">São Paulo — SP · Atendimento em todo o Brasil</div>
+          </div>
         </div>
         <div class="contato-item">
           <div class="contato-icone">🕐</div>
-          <div><h4>Horário de Atendimento</h4><p>Seg–Sex: 8h às 18h</p></div>
+          <div>
+            <div class="contato-item-lbl">Horário de Atendimento</div>
+            <div class="contato-item-val">Segunda a Sexta, 8h às 18h</div>
+          </div>
+        </div>
+        <div class="social-row">
+          <a href="#" class="social-btn" title="Instagram">📸</a>
+          <a href="#" class="social-btn" title="LinkedIn">💼</a>
+          <a href="#" class="social-btn" title="Facebook">📘</a>
+          <a href="#" class="social-btn" title="YouTube">▶️</a>
         </div>
       </div>
+
       <div class="form-contato reveal">
-        <form id="form-contato">
-          <div class="form-grid">
-            <div class="form-campo">
+        <h3 class="heading-md" style="margin-bottom:24px">Solicite uma consulta gratuita</h3>
+        <form id="form-contato" onsubmit="enviarContato(event)">
+          <div class="form-row">
+            <div class="campo">
               <label>Nome *</label>
-              <input type="text" name="nome" placeholder="Seu nome" required />
+              <input id="c-nome" type="text" required placeholder="Seu nome completo"/>
             </div>
-            <div class="form-campo">
+            <div class="campo">
               <label>Empresa *</label>
-              <input type="text" name="empresa" placeholder="Nome da empresa" required />
-            </div>
-            <div class="form-campo">
-              <label>Telefone *</label>
-              <input type="tel" name="telefone" placeholder="(00) 00000-0000" required />
-            </div>
-            <div class="form-campo">
-              <label>E-mail *</label>
-              <input type="email" name="email" placeholder="seu@email.com" required />
-            </div>
-            <div class="form-campo full">
-              <label>Mensagem</label>
-              <textarea name="mensagem" placeholder="Como podemos ajudar sua empresa?"></textarea>
+              <input id="c-empresa" type="text" required placeholder="Nome da empresa"/>
             </div>
           </div>
-          <button type="submit" class="btn-form">
-            <span id="btn-form-txt">Enviar Mensagem 📤</span>
+          <div class="form-row">
+            <div class="campo">
+              <label>E-mail *</label>
+              <input id="c-email" type="email" required placeholder="seu@email.com"/>
+            </div>
+            <div class="campo">
+              <label>WhatsApp</label>
+              <input id="c-wpp" type="tel" placeholder="(11) 99999-9999"/>
+            </div>
+          </div>
+          <div class="campo">
+            <label>Segmento da empresa</label>
+            <select id="c-segmento">
+              <option value="">— Selecione —</option>
+              <option>Comércio</option><option>Serviços</option><option>Indústria</option>
+              <option>Saúde</option><option>Educação</option><option>Tecnologia</option>
+              <option>Construção</option><option>Logística</option><option>Outro</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Faturamento mensal aproximado</label>
+            <select id="c-fat">
+              <option value="">— Selecione —</option>
+              <option>Até R$ 50 mil</option>
+              <option>R$ 50 mil a R$ 200 mil</option>
+              <option>R$ 200 mil a R$ 500 mil</option>
+              <option>R$ 500 mil a R$ 2 milhões</option>
+              <option>Acima de R$ 2 milhões</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Mensagem</label>
+            <textarea id="c-msg" placeholder="Conte um pouco sobre o desafio financeiro da sua empresa..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-prim btn-lg" style="width:100%;justify-content:center" id="btn-enviar">
+            Enviar Solicitação
           </button>
-          <p id="msg-form"></p>
+          <p class="form-msg" id="form-feedback"></p>
         </form>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Rodapé ──────────────────────────────────────────────────────────────── -->
+<!-- ═══ FOOTER ══════════════════════════════════════════════════════════════ -->
 <footer>
   <div class="container">
     <div class="footer-grid">
-      <div>
-        <img src="identidade-visual/logo-oficial.png" alt="Helmigui" class="footer-logo"
-             onerror="this.style.display='none'" />
-        <p class="footer-desc">Especialistas em BPO Financeiro, gestão financeira empresarial e consultoria estratégica para empresas que querem crescer com segurança.</p>
-        <div class="footer-social">
-          <a href="#" title="Instagram">📸</a>
-          <a href="#" title="LinkedIn">💼</a>
-          <a href="https://wa.me/5511999999999" target="_blank" title="WhatsApp">💬</a>
+      <div class="footer-brand">
+        <div class="footer-brand-logo">
+          <img src="identidade-visual/icon-mark.png" alt="" onerror="this.style.display='none'"/>
+          Helmigui
         </div>
-      </div>
-      <div class="footer-col">
-        <h4>Links Rápidos</h4>
-        <ul>
-          <li><a href="#inicio">Início</a></li>
-          <li><a href="#servicos">Serviços</a></li>
-          <li><a href="#sobre">Sobre Nós</a></li>
-          <li><a href="#depoimentos">Depoimentos</a></li>
-          <li><a href="#contato">Contato</a></li>
-        </ul>
+        <p>Especialistas em BPO Financeiro há mais de 12 anos. Organizamos o seu financeiro para que você possa focar no crescimento do seu negócio.</p>
+        <div class="social-row" style="margin-top:20px">
+          <a href="#" class="social-btn" style="border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)">📸</a>
+          <a href="#" class="social-btn" style="border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)">💼</a>
+          <a href="#" class="social-btn" style="border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)">📘</a>
+        </div>
       </div>
       <div class="footer-col">
         <h4>Serviços</h4>
         <ul>
+          <li><a href="#servicos">Gestão Financeira BPO</a></li>
           <li><a href="#servicos">Fluxo de Caixa</a></li>
           <li><a href="#servicos">Contas a Pagar</a></li>
           <li><a href="#servicos">Contas a Receber</a></li>
@@ -1126,137 +1005,184 @@
         </ul>
       </div>
       <div class="footer-col">
+        <h4>Empresa</h4>
+        <ul>
+          <li><a href="#diferenciais">Sobre a Helmigui</a></li>
+          <li><a href="#como-funciona">Como Funciona</a></li>
+          <li><a href="#depoimentos">Depoimentos</a></li>
+          <li><a href="#contato">Contato</a></li>
+          <li><a href="app.html">Área do Cliente</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
         <h4>Contato</h4>
         <ul>
-          <li><a href="tel:+5511999999999">📱 (11) 99999-9999</a></li>
-          <li><a href="mailto:contato@helmigui.com.br">📧 contato@helmigui.com.br</a></li>
-          <li><a href="https://wa.me/5511999999999" target="_blank">💬 WhatsApp</a></li>
-          <li><a href="#" onclick="alert('Portal do cliente em breve!')" style="color:var(--ouro)">🔐 Portal do Cliente</a></li>
+          <li><a href="tel:+5511999999999">(11) 99999-9999</a></li>
+          <li><a href="mailto:contato@helmigui.com.br">contato@helmigui.com.br</a></li>
+          <li><a href="#">São Paulo — SP</a></li>
+          <li><a href="#">Seg a Sex · 8h às 18h</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
       <p>© 2025 Helmigui Serviços Financeiros. Todos os direitos reservados.</p>
-      <p>
-        <a href="#">Política de Privacidade</a> &nbsp;·&nbsp;
-        <a href="#">LGPD</a>
-      </p>
+      <div class="footer-selos">
+        <span class="selo">LGPD Conforme</span>
+        <span class="selo">ISO 9001</span>
+        <span class="selo">BPO Certificado</span>
+      </div>
     </div>
   </div>
 </footer>
 
-<!-- ── WhatsApp flutuante ──────────────────────────────────────────────────── -->
-<a class="wpp-float" href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20conhecer%20os%20serviços%20da%20Helmigui%20Serviços%20Financeiros." target="_blank" title="Fale conosco no WhatsApp">
-  💬
-</a>
+<!-- WhatsApp flutuante -->
+<a href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20serviços%20da%20Helmigui." target="_blank" class="wpp-float" title="Falar no WhatsApp">💬</a>
 
-<!-- ── Scripts ─────────────────────────────────────────────────────────────── -->
+<!-- Scroll top -->
+<button class="scroll-top" id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Voltar ao topo">↑</button>
+
+<script src="config.js"></script>
 <script>
-// ── Header scroll ──────────────────────────────────────────────────────────
+// ── Header scroll ─────────────────────────────────────────────────────────────
+const header = document.getElementById('header');
+const scrollTop = document.getElementById('scroll-top');
 window.addEventListener('scroll', () => {
-  document.getElementById('header').classList.toggle('scrolled', window.scrollY > 40);
-});
+  const y = window.scrollY;
+  header.classList.toggle('scrolled', y > 60);
+  scrollTop.classList.toggle('vis', y > 400);
 
-// ── Nav mobile ─────────────────────────────────────────────────────────────
-function toggleNavMobile() { document.getElementById('nav-mobile').classList.toggle('aberto'); }
-function fecharNavMobile() { document.getElementById('nav-mobile').classList.remove('aberto'); }
+  // Active nav link
+  const sections = ['inicio','servicos','diferenciais','como-funciona','depoimentos','contato'];
+  let atual = '';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 100) atual = id;
+  });
+  document.querySelectorAll('.nav-link').forEach(a => {
+    const href = a.getAttribute('href')?.replace('#','');
+    a.classList.toggle('ativo', href === atual);
+  });
+}, { passive: true });
 
-// ── Scroll para contato ────────────────────────────────────────────────────
-function scrollParaContato() {
-  document.getElementById('contato').scrollIntoView({ behavior: 'smooth' });
+// ── Mobile menu ───────────────────────────────────────────────────────────────
+function toggleMenu() {
+  document.getElementById('hamburger').classList.toggle('aberto');
+  document.getElementById('nav-mobile').classList.toggle('aberto');
 }
 
-// ── Scroll reveal ──────────────────────────────────────────────────────────
+// ── Contadores animados ───────────────────────────────────────────────────────
+function animarContadores(els) {
+  els.forEach(el => {
+    const target = parseInt(el.dataset.target) || 0;
+    const suffix = el.dataset.suffix || '+';
+    const dur = 1800;
+    const step = target / (dur / 16);
+    let cur = 0;
+    const tick = () => {
+      cur = Math.min(cur + step, target);
+      el.textContent = Math.floor(cur) + (cur >= target ? suffix : '');
+      if (cur < target) requestAnimationFrame(tick);
+    };
+    tick();
+  });
+}
+
+// ── Reveal on scroll ──────────────────────────────────────────────────────────
+const revealEls = document.querySelectorAll('.reveal');
+const counterEls = document.querySelectorAll('[data-target]');
+let countersRan = false;
+
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => {
-    if (e.isIntersecting) { e.target.classList.add('visivel'); }
-  });
-}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-
-document.querySelectorAll('.reveal, .timeline-item').forEach(el => observer.observe(el));
-
-// ── Contador animado ───────────────────────────────────────────────────────
-function animarContador(el) {
-  const alvo = parseInt(el.dataset.alvo);
-  const prefixo = el.dataset.prefixo || '';
-  const sufixo = el.dataset.sufixo || '';
-  let atual = 0;
-  const duracao = 1800;
-  const passo = alvo / (duracao / 16);
-  const timer = setInterval(() => {
-    atual = Math.min(atual + passo, alvo);
-    el.textContent = prefixo + Math.round(atual) + sufixo;
-    if (atual >= alvo) clearInterval(timer);
-  }, 16);
-}
-
-const obsNums = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
     if (e.isIntersecting) {
-      e.target.querySelectorAll('[data-alvo]').forEach(animarContador);
-      obsNums.unobserve(e.target);
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
     }
   });
-}, { threshold: 0.4 });
-const secNums = document.getElementById('numeros');
-if (secNums) obsNums.observe(secNums);
+}, { threshold: 0.12 });
 
-// ── Slider de depoimentos ──────────────────────────────────────────────────
+revealEls.forEach(el => observer.observe(el));
+
+const counterObs = new IntersectionObserver((entries) => {
+  if (entries.some(e => e.isIntersecting) && !countersRan) {
+    countersRan = true;
+    animarContadores(counterEls);
+    counterObs.disconnect();
+  }
+}, { threshold: 0.3 });
+
+counterEls.forEach(el => counterObs.observe(el));
+
+// ── Slider depoimentos ────────────────────────────────────────────────────────
 (function() {
-  const track = document.getElementById('slider-track');
-  const dotsWrap = document.getElementById('slider-dots');
-  if (!track) return;
+  const slider = document.getElementById('depo-slider');
+  const nav    = document.getElementById('depo-nav');
+  const cards  = slider.querySelectorAll('.depo-card');
+  const visible = window.innerWidth > 860 ? 3 : window.innerWidth > 560 ? 2 : 1;
+  const total   = Math.ceil(cards.length / visible);
+  let atual = 0, timer;
 
-  const cards = track.querySelectorAll('.card-depoimento');
-  const total = cards.length;
-  let atual = 0;
-  let timer;
-
-  // Cria dots
-  cards.forEach((_, i) => {
-    const d = document.createElement('button');
-    d.className = 'slider-dot' + (i === 0 ? ' ativo' : '');
-    d.addEventListener('click', () => irPara(i));
-    dotsWrap.appendChild(d);
-  });
-
-  function irPara(idx) {
-    atual = idx;
-    const cardW = cards[0].offsetWidth + 24;
-    track.style.transform = `translateX(-${atual * cardW}px)`;
-    dotsWrap.querySelectorAll('.slider-dot').forEach((d, i) => {
-      d.classList.toggle('ativo', i === atual);
-    });
-    clearTimeout(timer);
-    timer = setTimeout(proximo, 4500);
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('button');
+    dot.className = 'depo-dot' + (i === 0 ? ' ativo' : '');
+    dot.onclick = () => irSlide(i);
+    nav.appendChild(dot);
   }
 
-  function proximo() { irPara((atual + 1) % total); }
-  timer = setTimeout(proximo, 4500);
-  window.addEventListener('resize', () => irPara(atual));
+  function irSlide(i) {
+    atual = i;
+    const w = slider.parentElement.offsetWidth;
+    slider.style.transform = `translateX(-${i * (w + 24)}px)`;
+    nav.querySelectorAll('.depo-dot').forEach((d, j) => d.classList.toggle('ativo', j === i));
+    clearInterval(timer);
+    timer = setInterval(() => irSlide((atual + 1) % total), 5000);
+  }
+
+  timer = setInterval(() => irSlide((atual + 1) % total), 5000);
 })();
 
-// ── Formulário de contato (EmailJS) ───────────────────────────────────────
-emailjs.init('SUA_PUBLIC_KEY'); // Substitua pela sua chave pública do EmailJS
-
-document.getElementById('form-contato').addEventListener('submit', async function(e) {
+// ── Formulário de contato ─────────────────────────────────────────────────────
+function enviarContato(e) {
   e.preventDefault();
-  const btn = document.getElementById('btn-form-txt');
-  const msg = document.getElementById('msg-form');
+  const btn = document.getElementById('btn-enviar');
+  const fb  = document.getElementById('form-feedback');
+  btn.disabled = true;
   btn.textContent = 'Enviando...';
 
-  try {
-    await emailjs.sendForm('SUA_SERVICE_ID', 'SUA_TEMPLATE_ID', this);
-    msg.textContent = '✅ Mensagem enviada! Entraremos em contato em breve.';
-    msg.className = 'ok'; msg.style.display = 'block';
-    this.reset();
-  } catch {
-    msg.textContent = '❌ Erro ao enviar. Tente pelo WhatsApp ou e-mail.';
-    msg.className = 'erro'; msg.style.display = 'block';
-  } finally {
-    btn.textContent = 'Enviar Mensagem 📤';
+  const nome    = document.getElementById('c-nome').value.trim();
+  const empresa = document.getElementById('c-empresa').value.trim();
+  const email   = document.getElementById('c-email').value.trim();
+  const wpp     = document.getElementById('c-wpp').value.trim();
+  const seg     = document.getElementById('c-segmento').value;
+  const fat     = document.getElementById('c-fat').value;
+  const msg     = document.getElementById('c-msg').value.trim();
+
+  // EmailJS (se configurado)
+  const cfg = typeof CONFIG !== 'undefined' ? CONFIG : {};
+  if (cfg.EMAILJS_PUBLIC_KEY && !cfg.EMAILJS_PUBLIC_KEY.startsWith('SUA_')) {
+    emailjs.init(cfg.EMAILJS_PUBLIC_KEY);
+    emailjs.send(cfg.EMAILJS_SERVICE_ID, cfg.EMAILJS_TEMPLATE_ID, {
+      nome, empresa, email, whatsapp: wpp, segmento: seg, faturamento: fat, mensagem: msg,
+    }).then(() => sucesso()).catch(() => fallbackWpp(nome, empresa, email, wpp, msg));
+  } else {
+    // Fallback: abre WhatsApp com os dados
+    fallbackWpp(nome, empresa, email, wpp, msg);
   }
-});
+
+  function sucesso() {
+    fb.textContent = '✔ Mensagem enviada! Entraremos em contato em até 24h.';
+    fb.className = 'form-msg ok'; fb.style.display = 'block';
+    document.getElementById('form-contato').reset();
+    btn.disabled = false; btn.textContent = 'Enviar Solicitação';
+  }
+
+  function fallbackWpp(nome, empresa, email, wpp, msg) {
+    const texto = `Olá! Solicito uma consultoria gratuita.%0A%0A*Nome:* ${nome}%0A*Empresa:* ${empresa}%0A*E-mail:* ${email}%0A*WhatsApp:* ${wpp}%0A*Mensagem:* ${msg || '—'}`;
+    const num   = (cfg.ADMIN_WHATSAPP || '5511999999999').replace(/\D/g,'');
+    window.open(`https://wa.me/${num}?text=${texto}`, '_blank');
+    sucesso();
+  }
+}
 </script>
 </body>
 </html>
