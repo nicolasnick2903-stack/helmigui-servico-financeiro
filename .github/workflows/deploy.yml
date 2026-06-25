@@ -1,0 +1,14 @@
+name: Deploy — Helmigui Serviços Financeiros
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        run: npx vercel deploy --prod --token "${{ secrets.VERCEL_TOKEN }}" --scope nicolasnick2903-stacks-projects --yes
