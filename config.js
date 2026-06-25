@@ -16,6 +16,14 @@ const CONFIG = {
     "helmigui@helmigui.com.br",
   ],
 
+  // ── SENHAS DOS ADMINS (modo localStorage, sem Firebase) ─────────────────────
+  // Mapeamento email → senha. Usado apenas quando Firebase NÃO está configurado.
+  // Quando Firebase estiver ativo, as senhas são gerenciadas por lá (mais seguro).
+  ADMIN_SENHAS: {
+    "admin@helmigui.com.br":    "Helmigui@2025",   // ← troque para sua senha
+    "helmigui@helmigui.com.br": "Helmigui@2025",   // ← troque para sua senha
+  },
+
   // ── EVOLUTION API — WhatsApp Business ───────────────────────────────────────
   // Preencha quando tiver o servidor Evolution API rodando
   // Exemplo de URL: "https://api.seudominio.com.br"

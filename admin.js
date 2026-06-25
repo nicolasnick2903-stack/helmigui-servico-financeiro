@@ -134,6 +134,7 @@ function irPara(secao, btn) {
     "cadastro-cliente": "Cadastro de Cliente", notas: "Notas Fiscais",
     mensageria: "Mensageria", alertas: "Alertas Automáticos",
     financeiro: "Gestão Financeira", relatorios: "Relatórios",
+    usuarios: "Usuários & Acesso",
   };
   document.getElementById("topbar-titulo").textContent = titulos[secao] || secao;
   Admin.secaoAtual = secao;
@@ -144,6 +145,7 @@ function irPara(secao, btn) {
   if (secao === "mensageria")    { renderMsgRecebidas(); }
   if (secao === "alertas")       renderAlertas();
   if (secao === "financeiro")    renderFinanceiro();
+  if (secao === "usuarios")      renderUsuarios();
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -267,13 +269,31 @@ function filtrarClientes() {
 
 async function salvarClienteForm(e) {
   e.preventDefault();
+  const email  = v("cl-email").trim();
+  const senha  = v("cl-senha");
+  const senha2 = v("cl-senha2");
+  const isNovo = !v("cl-id");
+
+  if (!v("cl-razao").trim() || !v("cl-cnpj").trim() || !email) {
+    toast("Preencha Razão Social, CNPJ e E-mail."); return;
+  }
+  if (isNovo && !senha) {
+    toast("Defina uma senha de acesso para o cliente."); return;
+  }
+  if (senha && senha !== senha2) {
+    toast("As senhas não coincidem."); return;
+  }
+  if (senha && senha.length < 6) {
+    toast("A senha deve ter pelo menos 6 caracteres."); return;
+  }
+
   const dados = {
     id:           v("cl-id") || null,
     razaoSocial:  v("cl-razao").trim(),
     nomeFantasia: v("cl-fantasia").trim(),
     cnpj:         v("cl-cnpj").trim(),
     ie:           v("cl-ie").trim(),
-    email:        v("cl-email").trim(),
+    email,
     telefone:     v("cl-tel").trim(),
     whatsapp:     v("cl-wpp").trim(),
     segmento:     v("cl-segmento"),
@@ -289,12 +309,33 @@ async function salvarClienteForm(e) {
     status:       v("cl-status"),
     atualizadoEm: new Date().toISOString(),
   };
-  if (!dados.razaoSocial || !dados.cnpj || !dados.email) {
-    toast("Preencha Razão Social, CNPJ e E-mail."); return;
-  }
+
   try {
     const id = await salvarCliente(dados);
-    toast("✔ Cliente salvo com sucesso!");
+    dados.id = id;
+
+    // Salva credenciais de acesso no localStorage (modo sem Firebase)
+    if (senha) {
+      salvarUsuarioLocal({
+        uid:         id,
+        email:       email.toLowerCase(),
+        senha,
+        clienteId:   id,
+        razaoSocial: dados.razaoSocial,
+        status:      dados.status,
+      });
+    } else {
+      // Atualiza nome/status sem trocar senha
+      const usuarios = carregarUsuariosLocal();
+      const idx      = usuarios.findIndex(u => u.email === email.toLowerCase());
+      if (idx >= 0) {
+        usuarios[idx].razaoSocial = dados.razaoSocial;
+        usuarios[idx].status      = dados.status;
+        salvarTodosUsuariosLocal(usuarios);
+      }
+    }
+
+    toast("✔ Cliente salvo! Login: " + email);
     await carregarTudo();
     limparFormCliente();
     irPara("clientes", null);
@@ -304,7 +345,8 @@ async function salvarClienteForm(e) {
 function limparFormCliente() {
   setVal("cl-id", "");
   ["cl-razao","cl-fantasia","cl-cnpj","cl-ie","cl-email","cl-tel","cl-wpp",
-   "cl-cep","cl-end","cl-cidade","cl-responsavel","cl-cargo","cl-obs"].forEach(id => setVal(id, ""));
+   "cl-cep","cl-end","cl-cidade","cl-responsavel","cl-cargo","cl-obs",
+   "cl-senha","cl-senha2"].forEach(id => setVal(id, ""));
   setVal("cl-segmento", ""); setVal("cl-estado", "SP"); setVal("cl-plano", "");
   setVal("cl-status", "ativo");
   document.getElementById("cadastro-titulo").textContent = "Novo Cliente";
@@ -332,6 +374,8 @@ async function editarCliente(id) {
   setVal("cl-plano",       c.plano || "");
   setVal("cl-obs",         c.observacoes || "");
   setVal("cl-status",      c.status || "ativo");
+  setVal("cl-senha",  ""); // não pré-preenche — deixa vazio para não alterar senha
+  setVal("cl-senha2", "");
   document.getElementById("cadastro-titulo").textContent = "Editar: " + c.razaoSocial;
   irPara("cadastro-cliente", null);
   // Ativa sidebar btn correto
@@ -719,6 +763,96 @@ async function exportarAdmin(tipo, formato) {
 // ── Modais ────────────────────────────────────────────────────────────────────
 function fecharModal(id) {
   document.getElementById(id).classList.remove("ativo");
+}
+
+// ── Usuários & Acesso ─────────────────────────────────────────────────────────
+function carregarUsuariosLocal() {
+  return JSON.parse(localStorage.getItem("helmigui_usuarios") || "[]");
+}
+
+function salvarTodosUsuariosLocal(lista) {
+  localStorage.setItem("helmigui_usuarios", JSON.stringify(lista));
+}
+
+function salvarUsuarioLocal(u) {
+  const lista = carregarUsuariosLocal();
+  const idx   = lista.findIndex(x => x.email === u.email.toLowerCase());
+  const novo  = { ...u, email: u.email.toLowerCase() };
+  if (idx >= 0) lista[idx] = { ...lista[idx], ...novo };
+  else lista.unshift(novo);
+  salvarTodosUsuariosLocal(lista);
+}
+
+function renderUsuarios() {
+  const usuarios = carregarUsuariosLocal();
+  const tbody    = el("tbody-usuarios");
+
+  if (!usuarios.length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="vazio">Nenhum cliente cadastrado com acesso ao portal.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = usuarios.map((u, i) => `
+    <tr>
+      <td><strong>${esc(u.razaoSocial || "—")}</strong></td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:.8rem">${esc(u.email)}</td>
+      <td><span class="badge ${u.status === "ativo" ? "badge-verde" : "badge-clay"}">${u.status || "ativo"}</span></td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-ouro btn-xs" onclick="redefinirSenha(${i})">🔑 Redefinir Senha</button>
+          <button class="btn btn-clay btn-xs" onclick="removerAcessoUsuario(${i})">🗑 Remover Acesso</button>
+        </div>
+      </td>
+    </tr>`).join("");
+}
+
+function redefinirSenha(idx) {
+  const usuarios = carregarUsuariosLocal();
+  const u        = usuarios[idx];
+  if (!u) return;
+  const novaSenha = prompt(`Nova senha para ${u.email} (mín. 6 caracteres):`);
+  if (!novaSenha) return;
+  if (novaSenha.length < 6) { toast("Senha muito curta. Mínimo 6 caracteres."); return; }
+  usuarios[idx].senha = novaSenha;
+  salvarTodosUsuariosLocal(usuarios);
+  toast(`✔ Senha de ${u.email} redefinida.`);
+}
+
+function removerAcessoUsuario(idx) {
+  const usuarios = carregarUsuariosLocal();
+  const u        = usuarios[idx];
+  if (!u) return;
+  if (!confirm(`Remover acesso ao portal de ${u.email}?`)) return;
+  usuarios.splice(idx, 1);
+  salvarTodosUsuariosLocal(usuarios);
+  renderUsuarios();
+  toast(`Acesso de ${u.email} removido.`);
+}
+
+function alterarSenhaAdmin(e) {
+  e.preventDefault();
+  const email    = Admin.email?.toLowerCase() || "";
+  const atual    = v("adm-senha-atual");
+  const nova     = v("adm-senha-nova");
+  const conf     = v("adm-senha-conf");
+
+  if (nova !== conf) { toast("As senhas não coincidem."); return; }
+  if (nova.length < 6) { toast("Nova senha muito curta."); return; }
+
+  // Verifica senha atual
+  const senhasConfig = CONFIG.ADMIN_SENHAS || {};
+  const chaveLocal   = "helmigui_admin_senhas";
+  const senhasLocal  = JSON.parse(localStorage.getItem(chaveLocal) || "{}");
+  const senhaAtual   = senhasLocal[email] || senhasConfig[email] || "";
+
+  if (senhaAtual && atual !== senhaAtual) {
+    toast("Senha atual incorreta."); return;
+  }
+
+  senhasLocal[email] = nova;
+  localStorage.setItem(chaveLocal, JSON.stringify(senhasLocal));
+  toast("✔ Senha alterada com sucesso!");
+  document.getElementById("form-senha-admin").reset();
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

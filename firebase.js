@@ -44,7 +44,14 @@ async function loginComEmail(email, senha) {
   const usuario  = usuarios.find(u => u.email.toLowerCase() === emailLower);
 
   if (admins.includes(emailLower)) {
-    // Admin: aceita qualquer senha em modo localStorage (sem Firebase não há verificação real)
+    // Valida senha: prioriza senha local (alterada pelo admin), depois config.js
+    const senhasLocal  = JSON.parse(localStorage.getItem("helmigui_admin_senhas") || "{}");
+    const senhaCorreta = senhasLocal[emailLower] || (CONFIG.ADMIN_SENHAS || {})[emailLower];
+    if (senhaCorreta && senha !== senhaCorreta) {
+      const err = new Error("Senha incorreta.");
+      err.code  = "auth/wrong-password";
+      throw err;
+    }
     const user = { uid: "admin-" + emailLower, email };
     localStorage.setItem("helmigui_uid",     user.uid);
     localStorage.setItem("helmigui_email",   email);

@@ -214,6 +214,13 @@
       </button>
     </div>
 
+    <div class="sidebar-group">
+      <div class="sidebar-group-lbl">Sistema</div>
+      <button class="sidebar-btn" onclick="irPara('usuarios',this)">
+        <span class="icon">🔑</span> Usuários & Acesso
+      </button>
+    </div>
+
     <div class="sidebar-footer">
       <div class="sidebar-user" id="admin-email-label">—</div>
       <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
@@ -281,8 +288,19 @@
             <div class="campo"><label>Inscrição Estadual</label><input id="cl-ie" placeholder="IE" class="mono"/></div>
           </div>
           <div class="grid-2">
-            <div class="campo"><label>E-mail *</label><input id="cl-email" type="email" required placeholder="contato@empresa.com"/></div>
+            <div class="campo"><label>E-mail * (usado no login)</label><input id="cl-email" type="email" required placeholder="contato@empresa.com"/></div>
             <div class="campo"><label>Telefone</label><input id="cl-tel" placeholder="(11) 99999-9999" class="mono"/></div>
+          </div>
+          <div class="grid-2">
+            <div class="campo">
+              <label>Senha de Acesso ao Portal *</label>
+              <input id="cl-senha" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+              <span style="font-size:.68rem;color:var(--muted);margin-top:3px">O cliente usará este e-mail + senha para entrar em app.html</span>
+            </div>
+            <div class="campo">
+              <label>Confirmar Senha</label>
+              <input id="cl-senha2" type="password" placeholder="Repita a senha" autocomplete="new-password"/>
+            </div>
           </div>
           <div class="grid-2">
             <div class="campo"><label>WhatsApp</label><input id="cl-wpp" placeholder="5511999999999" class="mono"/></div>
@@ -501,6 +519,43 @@
             <button class="btn btn-prim btn-sm" onclick="exportarAdmin('dre','pdf')">📈 DRE PDF</button>
             <button class="btn btn-sec btn-sm" onclick="exportarAdmin('notas','excel')">📋 Notas Excel</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUÁRIOS & ACESSO -->
+    <div id="sec-usuarios" class="main-content">
+      <div class="eyebrow">USUÁRIOS & ACESSO</div>
+
+      <!-- Senha do admin -->
+      <div class="card" style="max-width:480px">
+        <div class="card-titulo">🔐 Alterar Minha Senha (Admin)</div>
+        <form id="form-senha-admin" style="display:flex;flex-direction:column;gap:12px" onsubmit="alterarSenhaAdmin(event)">
+          <div class="campo"><label>Senha Atual</label><input id="adm-senha-atual" type="password" required/></div>
+          <div class="campo"><label>Nova Senha</label><input id="adm-senha-nova" type="password" required minlength="6"/></div>
+          <div class="campo"><label>Confirmar Nova Senha</label><input id="adm-senha-conf" type="password" required/></div>
+          <button type="submit" class="btn btn-prim btn-sm">🔒 Alterar Senha</button>
+        </form>
+        <p style="margin-top:12px;font-size:.72rem;color:var(--muted)">
+          A senha é salva localmente no navegador. Quando ativar o Firebase, use o painel do Firebase Console para gerenciar senhas.
+        </p>
+      </div>
+
+      <!-- Usuários clientes cadastrados -->
+      <div class="card">
+        <div class="card-titulo">👥 Clientes com Acesso ao Portal</div>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:14px">
+          Clientes cadastrados aqui conseguem fazer login em
+          <strong>app.html</strong> com o e-mail e senha definidos no cadastro.
+        </p>
+        <div class="tabela-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>E-mail de Login</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-usuarios"><tr><td colspan="4" class="vazio">Nenhum usuário.</td></tr></tbody>
+          </table>
+        </div>
+        <div style="margin-top:14px">
+          <button class="btn btn-prim btn-sm" onclick="irPara('cadastro-cliente',null)">➕ Cadastrar Novo Cliente</button>
         </div>
       </div>
     </div>
