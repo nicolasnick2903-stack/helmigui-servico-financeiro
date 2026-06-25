@@ -1,448 +1,543 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#1E4D25" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" href="identidade-visual/icons/apple-touch-icon.png" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="identidade-visual/icon-mark.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <title>Admin — Helmigui</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Helmigui — Painel Admin</title>
+  <link rel="icon" href="identidade-visual/icon-mark.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet"/>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- jsPDF + autoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
   <style>
     :root {
-      --paper: #F1F4EC;
-      --paper-deep: #E5EADC;
-      --ink: #1C2B22;
-      --ink-soft: #5B6B5E;
-      --teal: #1E4D25;
-      --teal-light: #2F6B3E;
-      --gold: #D1A84E;
-      --clay: #A8472E;
-      --line: #C9D1BD;
-      --radius: 12px;
-      --sombra: 0 2px 12px rgba(28,43,34,.10);
+      --verde:#0F5132; --verde-l:#1a7a4a; --verde-d:#0a3d26;
+      --ouro:#D4AF37; --ouro-l:#e8c94b;
+      --clay:#A8472E; --clay-l:rgba(168,71,46,.1);
+      --bg:#F0F5F0; --card:#fff; --border:#DDE8DD;
+      --ink:#1C2B22; --muted:#5B6B5E; --sidebar-w:240px;
+      --radius:12px; --sh:0 2px 10px rgba(15,81,50,.09);
     }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg)}
+    img{max-width:100%} button,input,select,textarea{font-family:inherit}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Layout ── */
+    .admin-shell{display:flex;height:100dvh;overflow:hidden}
+    .sidebar{width:var(--sidebar-w);background:var(--verde-d);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+    .content{flex:1;overflow-y:auto;display:flex;flex-direction:column}
 
-    body {
-      font-family: 'IBM Plex Sans', sans-serif;
-      background: var(--paper);
-      color: var(--ink);
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    /* ── Sidebar ── */
+    .sidebar-logo{padding:20px 16px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .sidebar-logo img{height:32px;object-fit:contain}
+    .sidebar-logo span{font-family:'Poppins',sans-serif;font-weight:800;font-size:0.85rem;color:#fff;line-height:1.2}
+    .sidebar-logo small{color:rgba(255,255,255,.5);font-size:0.6rem;font-weight:400;display:block}
+    .sidebar-group{padding:12px 0 4px}
+    .sidebar-group-lbl{padding:4px 16px 6px;font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35)}
+    .sidebar-btn{display:flex;align-items:center;gap:10px;padding:9px 16px;width:100%;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:0.82rem;font-weight:500;border-radius:0;transition:all .15s;text-align:left}
+    .sidebar-btn span.icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+    .sidebar-btn:hover{background:rgba(255,255,255,.07);color:#fff}
+    .sidebar-btn.ativo{background:rgba(255,255,255,.12);color:#fff;font-weight:700;border-left:3px solid var(--ouro)}
+    .sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.08)}
+    .sidebar-user{font-size:0.75rem;color:rgba(255,255,255,.6);margin-bottom:10px;word-break:break-all}
+    .btn-logout{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:0.78rem;padding:8px 12px;border-radius:8px;width:100%;transition:all .15s}
+    .btn-logout:hover{background:rgba(255,255,255,.15);color:#fff}
 
-    .container {
-      width: 100%;
-      max-width: 520px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
+    /* ── Topbar ── */
+    .topbar{background:#fff;border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+    .topbar-titulo{font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;color:var(--verde);flex:1}
 
-    /* ── Cabeçalho admin ─────────────────────────────────────────────────── */
-    .cabecalho {
-      background: var(--teal);
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 20;
-    }
-    .cabecalho img.logo { height: 36px; object-fit: contain; }
-    .cabecalho-info { display: flex; flex-direction: column; }
-    .cabecalho-subtitulo { font-size: 0.65rem; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .06em; }
-    .cabecalho-titulo { font-family: 'Lora', serif; font-size: 0.95rem; font-weight: 700; color: #fff; }
+    /* ── Main ── */
+    .main-content{padding:24px;display:none;flex-direction:column;gap:20px;flex:1}
+    .main-content.ativo{display:flex}
 
-    /* ── Botão hambúrguer ────────────────────────────────────────────────── */
-    .btn-hamburger {
-      background: none; border: none; cursor: pointer;
-      display: flex; flex-direction: column; gap: 5px; padding: 6px;
-    }
-    .btn-hamburger span {
-      display: block; width: 24px; height: 2.5px;
-      background: #fff; border-radius: 2px;
-      transition: transform .2s, opacity .2s;
-    }
+    /* ── Tela Login ── */
+    #tela-login{display:flex;align-items:center;justify-content:center;min-height:100dvh;background:linear-gradient(160deg,var(--verde-d),var(--verde))}
+    .login-card{background:#fff;border-radius:20px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+    .login-logo{display:block;height:52px;object-fit:contain;margin:0 auto 20px}
+    .login-titulo{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.1rem;color:var(--verde);text-align:center;margin-bottom:4px}
+    .login-sub{font-size:0.78rem;color:var(--muted);text-align:center;margin-bottom:24px}
+    .campo-login{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+    .campo-login label{font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    .campo-login input{border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:0.92rem;outline:none;transition:border-color .15s}
+    .campo-login input:focus{border-color:var(--verde)}
+    #login-erro{color:var(--clay);font-size:0.78rem;text-align:center;display:none;margin-bottom:8px}
 
-    /* ── Overlay ─────────────────────────────────────────────────────────── */
-    .overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(28,43,34,.5);
-      z-index: 25;
-    }
-    .overlay.visivel { display: block; }
+    /* ── Cards / Grid ── */
+    .card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--sh)}
+    .card-titulo{font-family:'Poppins',sans-serif;font-weight:700;font-size:0.92rem;color:var(--ink);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:700px){.grid-4{grid-template-columns:1fr}.sidebar{display:none}}
 
-    /* ── Menu lateral (drawer) ───────────────────────────────────────────── */
-    .menu-lateral {
-      position: fixed;
-      top: 0; left: -280px;
-      width: 280px; height: 100dvh;
-      background: #fff;
-      z-index: 30;
-      display: flex; flex-direction: column;
-      box-shadow: 4px 0 24px rgba(28,43,34,.18);
-      transition: left .25s ease;
-      overflow-y: auto;
-    }
-    .menu-lateral.aberto { left: 0; }
+    /* ── KPI cards ── */
+    .kpi{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px;box-shadow:var(--sh)}
+    .kpi-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+    .kpi-valor{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--ink)}
+    .kpi-valor.verde{color:var(--verde-l)}.kpi-valor.clay{color:var(--clay)}.kpi-valor.ouro{color:var(--ouro)}
+    .kpi-sub{font-size:0.7rem;color:var(--muted);margin-top:4px}
 
-    /* Em desktop: menu lateral sempre visível */
-    @media (min-width: 900px) {
-      .menu-lateral {
-        position: sticky;
-        left: 0; top: 0;
-        height: 100vh;
-        box-shadow: 2px 0 12px rgba(28,43,34,.08);
-      }
-      .btn-hamburger { display: none; }
-      .overlay { display: none !important; }
-      body { flex-direction: row; align-items: stretch; }
-      .container { flex-direction: row; max-width: 100%; }
-      .conteudo-admin { flex: 1; overflow-y: auto; }
-    }
+    /* ── Tabelas ── */
+    .tabela-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse;font-size:0.82rem}
+    thead{background:var(--verde);color:#fff}
+    th{padding:10px 14px;text-align:left;font-weight:700;font-size:0.75rem;text-transform:uppercase;letter-spacing:.04em}
+    td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#f8faf8}
+    .td-mono{font-family:'IBM Plex Mono',monospace;font-size:0.8rem}
+    .td-actions{display:flex;gap:6px;flex-wrap:nowrap}
 
-    .menu-topo {
-      background: var(--teal);
-      padding: 20px 16px 14px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .menu-topo img { height: 32px; object-fit: contain; }
-    .menu-fechar {
-      background: none; border: none; cursor: pointer;
-      color: #fff; font-size: 1.3rem; line-height: 1; padding: 4px 8px;
-    }
-    @media (min-width: 900px) { .menu-fechar { display: none; } }
+    /* ── Formulários ── */
+    .campo{display:flex;flex-direction:column;gap:5px}
+    .campo label{font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    .campo input,.campo select,.campo textarea{background:#fff;border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-size:0.88rem;color:var(--ink);outline:none;transition:border-color .15s}
+    .campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--verde)}
+    .campo textarea{resize:vertical;min-height:72px}
+    .campo input.mono{font-family:'IBM Plex Mono',monospace}
 
-    .menu-label {
-      font-size: 0.65rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .08em;
-      color: var(--ink-soft);
-      padding: 12px 16px 4px;
-    }
+    /* ── Badges / Pills ── */
+    .badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:20px;font-size:0.65rem;font-weight:700;text-transform:uppercase}
+    .badge-verde{background:#D1FAE5;color:#065F46}.badge-clay{background:#FEE2E2;color:#991B1B}
+    .badge-ouro{background:#FEF3C7;color:#92400E}.badge-cinza{background:#F3F4F6;color:#374151}
+    .badge-azul{background:#EEF2FF;color:#3730A3}
 
-    .menu-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 16px;
-      border: none; background: none;
-      width: 100%; text-align: left;
-      cursor: pointer;
-      font-size: 0.9rem; color: var(--ink); font-weight: 500;
-      border-bottom: 1px solid var(--paper-deep);
-      transition: background .12s;
-    }
-    .menu-item:hover { background: var(--paper); }
-    .menu-item .icone { font-size: 1.1rem; width: 24px; text-align: center; }
-    .menu-item .seta {
-      margin-left: auto; font-size: 0.8rem;
-      transition: transform .2s;
-    }
-    .menu-item.expandido .seta { transform: rotate(180deg); }
+    /* ── Botões ── */
+    .btn{padding:9px 18px;border-radius:9px;border:none;cursor:pointer;font-weight:600;font-size:0.82rem;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn-prim{background:var(--verde);color:#fff}.btn-prim:hover:not(:disabled){background:var(--verde-l)}
+    .btn-ouro{background:var(--ouro);color:#1c2b22}.btn-ouro:hover:not(:disabled){background:var(--ouro-l)}
+    .btn-sec{background:var(--bg);border:1.5px solid var(--border);color:var(--ink)}.btn-sec:hover:not(:disabled){border-color:var(--verde)}
+    .btn-clay{background:var(--clay-l);color:var(--clay);border:1px solid rgba(168,71,46,.25)}
+    .btn-sm{padding:5px 12px;font-size:0.75rem}
+    .btn-xs{padding:3px 8px;font-size:0.68rem;border-radius:6px}
+    .btn-full{width:100%;justify-content:center}
+    .btn-wpp{background:#25D366;color:#fff}.btn-wpp:hover{background:#20ba5a}
 
-    /* ── Submenu (accordion) ─────────────────────────────────────────────── */
-    .submenu {
-      display: none;
-      flex-direction: column;
-      background: var(--paper-deep);
-      border-bottom: 1px solid var(--line);
-    }
-    .submenu.aberto { display: flex; }
-    .submenu-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 10px 16px 10px 36px;
-      border: none; background: none;
-      width: 100%; text-align: left;
-      cursor: pointer;
-      font-size: 0.85rem; color: var(--ink-soft); font-weight: 500;
-      border-bottom: 1px solid var(--line);
-      transition: background .12s;
-    }
-    .submenu-item:hover { background: var(--paper); color: var(--teal); }
+    /* ── Modal ── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;align-items:center;justify-content:center;padding:16px}
+    .modal-bg.ativo{display:flex}
+    .modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:560px;max-height:90dvh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.25)}
+    .modal-titulo{font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;color:var(--verde);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+    .modal-fechar{background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--muted);padding:2px}
 
-    /* ── Conteúdo principal admin ────────────────────────────────────────── */
-    .conteudo-admin {
-      flex: 1;
-      padding: 20px 16px 32px;
-      display: flex; flex-direction: column; gap: 16px;
-    }
-
-    .tela-admin { display: none; }
-    .tela-admin.ativa { display: flex; flex-direction: column; gap: 14px; }
-
-    /* ── Formulário cliente ──────────────────────────────────────────────── */
-    .campo { display: flex; flex-direction: column; gap: 5px; }
-    .campo label { font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
-    .campo input,
-    .campo select {
-      background: #fff;
-      border: 1.5px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 0.92rem; color: var(--ink);
-      font-family: inherit; outline: none;
-      transition: border-color .15s;
-    }
-    .campo input:focus, .campo select:focus { border-color: var(--teal); }
-    .campo input.mono { font-family: 'IBM Plex Mono', monospace; }
-
-    .toggle-wpp {
-      display: flex; gap: 8px;
-    }
-    .toggle-wpp label {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      padding: 9px;
-      border: 1.5px solid var(--line); border-radius: 8px;
-      cursor: pointer; font-size: 0.88rem; font-weight: 500;
-      transition: all .15s;
-    }
-    .toggle-wpp input[type="radio"] { display: none; }
-    .toggle-wpp input[type="radio"]:checked + span {
-      /* estilo via JS porque label envolve input */
-    }
-
-    .btn-primario {
-      background: var(--teal); color: #fff; border: none;
-      border-radius: var(--radius); padding: 13px 20px;
-      font-size: 0.95rem; font-weight: 600; cursor: pointer; width: 100%;
-    }
-    .btn-primario:hover { background: var(--teal-light); }
-    .btn-secundario {
-      background: var(--paper-deep); color: var(--ink);
-      border: 1px solid var(--line); border-radius: 8px;
-      padding: 8px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
-    }
-    .btn-perigo {
-      background: rgba(168,71,46,.1); color: var(--clay);
-      border: 1px solid rgba(168,71,46,.25); border-radius: 8px;
-      padding: 8px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
-    }
-
-    #msg-cliente-salvo {
-      display: none;
-      background: #d4edda; color: #155724;
-      border: 1px solid #c3e6cb; border-radius: 8px;
-      padding: 10px 14px; font-size: 0.85rem; text-align: center;
-    }
-
-    /* ── Cards de cliente ────────────────────────────────────────────────── */
-    .card-cliente {
-      background: #fff; border: 1px solid var(--line);
-      border-radius: var(--radius); padding: 14px 16px;
-      box-shadow: var(--sombra);
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    .cliente-nome { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
-    .cliente-detalhe { font-size: 0.78rem; color: var(--ink-soft); }
-    .mono { font-family: 'IBM Plex Mono', monospace; }
-    .badge-wpp {
-      display: inline-block; font-size: 0.65rem; font-weight: 700;
-      background: #E6F0E8; color: var(--teal);
-      padding: 2px 7px; border-radius: 20px; margin-left: 4px;
-    }
-    .cliente-acoes { display: flex; gap: 8px; margin-top: 10px; }
-    .vazio { text-align: center; color: var(--ink-soft); font-size: 0.85rem; padding: 24px 0; }
-
-    .page-titulo {
-      font-family: 'Lora', serif; font-size: 1.05rem;
-      color: var(--teal); font-weight: 700;
-    }
-    .page-desc { font-size: 0.78rem; color: var(--ink-soft); }
-
-    /* ── Link voltar ao app ──────────────────────────────────────────────── */
-    .link-voltar {
-      color: var(--teal); font-size: 0.8rem;
-      text-decoration: none; font-weight: 600;
-    }
-    .link-voltar:hover { text-decoration: underline; }
+    /* ── Misc ── */
+    .eyebrow{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ouro);margin-bottom:4px}
+    .vazio{text-align:center;color:var(--muted);font-size:0.84rem;padding:24px 0}
+    .sep{height:1px;background:var(--border);margin:4px 0}
+    .toast{position:fixed;bottom:24px;right:24px;background:#1C2B22;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.82rem;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;max-width:360px}
+    .toast.vis{opacity:1}
+    .search-bar{display:flex;gap:10px;align-items:center}
+    .search-bar input{flex:1;border:1.5px solid var(--border);border-radius:9px;padding:8px 14px;font-size:0.85rem;outline:none;transition:border-color .15s}
+    .search-bar input:focus{border-color:var(--verde)}
+    .nota-status-sel{border:1.5px solid var(--border);border-radius:7px;padding:4px 8px;font-size:0.75rem;outline:none;cursor:pointer}
+    .msg-card{border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--bg)}
+    .msg-card.nao-lida{border-color:var(--ouro);background:#fffbeb}
   </style>
 </head>
 <body>
 
-<div id="overlay" class="overlay" onclick="fecharMenu()"></div>
+<!-- ═══ LOGIN ════════════════════════════════════════════════════════════════ -->
+<div id="tela-login">
+  <div class="login-card">
+    <img src="identidade-visual/logo-oficial.png" alt="Helmigui" class="login-logo"
+         onerror="this.style.display='none'"/>
+    <p class="login-titulo">Painel Administrativo</p>
+    <p class="login-sub">Acesso restrito a administradores</p>
+    <div class="campo-login"><label>E-mail</label>
+      <input id="login-email" type="email" placeholder="admin@helmigui.com.br" autocomplete="email"/></div>
+    <div class="campo-login"><label>Senha</label>
+      <input id="login-senha" type="password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')fazerLogin()"/></div>
+    <p id="login-erro"></p>
+    <button class="btn btn-prim btn-full" id="btn-login" onclick="fazerLogin()">Entrar</button>
+  </div>
+</div>
 
-<div class="container">
+<!-- ═══ APP ══════════════════════════════════════════════════════════════════ -->
+<div class="admin-shell" id="admin-shell" style="display:none">
 
-  <!-- ── Cabeçalho ──────────────────────────────────────────────────────── -->
-  <header class="cabecalho">
-    <button class="btn-hamburger" onclick="toggleMenu()" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
-    <div class="cabecalho-info">
-      <span class="cabecalho-subtitulo">Painel</span>
-      <span class="cabecalho-titulo">Administração</span>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="identidade-visual/icon-mark.png" alt="" onerror="this.style.display='none'"/>
+      <span>Helmigui<small>Painel Admin</small></span>
     </div>
-    <img src="identidade-visual/icon-mark.png" alt="Helmigui" class="logo" onerror="this.style.display='none'" />
-  </header>
 
-  <!-- ── Menu lateral ───────────────────────────────────────────────────── -->
-  <nav id="menu-lateral" class="menu-lateral">
-    <div class="menu-topo">
-      <img src="identidade-visual/logo-oficial.png" alt="Helmigui" onerror="this.style.display='none'" />
-      <button class="menu-fechar" onclick="fecharMenu()">✕</button>
-    </div>
-
-    <p class="menu-label">Módulos</p>
-
-    <!-- Item "Cliente" com accordion -->
-    <button class="menu-item" id="btn-menu-cliente" onclick="toggleSubmenuCliente()">
-      <span class="icone">👥</span>
-      Clientes
-      <span class="seta">▾</span>
-    </button>
-    <div id="submenu-cliente" class="submenu">
-      <button class="submenu-item" onclick="irParaAdmin('cadastrar-cliente')">
-        ➕ Cadastrar Cliente
-      </button>
-      <button class="submenu-item" onclick="irParaAdmin('clientes-ativos')">
-        📋 Clientes Ativos
+    <div class="sidebar-group">
+      <div class="sidebar-group-lbl">Visão Geral</div>
+      <button class="sidebar-btn ativo" onclick="irPara('dashboard',this)">
+        <span class="icon">📊</span> Dashboard
       </button>
     </div>
-
-    <div style="flex:1"></div>
-    <div style="padding:16px;border-top:1px solid var(--line)">
-      <a href="index.html" class="link-voltar">← Voltar ao app do cliente</a>
+    <div class="sidebar-group">
+      <div class="sidebar-group-lbl">Clientes</div>
+      <button class="sidebar-btn" onclick="irPara('clientes',this)">
+        <span class="icon">👥</span> Gestão de Clientes
+      </button>
+      <button class="sidebar-btn" onclick="irPara('cadastro-cliente',this)">
+        <span class="icon">➕</span> Novo Cliente
+      </button>
     </div>
-  </nav>
-
-  <!-- ── Conteúdo ───────────────────────────────────────────────────────── -->
-  <main class="conteudo-admin">
-
-    <!-- Tela: Cadastrar Cliente -->
-    <div id="admin-cadastrar-cliente" class="tela-admin">
-      <h2 class="page-titulo">Cadastrar Cliente</h2>
-      <p class="page-desc">Preencha os dados para adicionar um novo cliente ativo.</p>
-
-      <div id="msg-cliente-salvo">✅ Cliente salvo com sucesso!</div>
-
-      <form id="form-cliente" style="display:flex;flex-direction:column;gap:12px">
-        <!-- id oculto para edição -->
-        <input type="hidden" id="cli-id" name="cli-id" value="" />
-
-        <div class="campo">
-          <label>Nome do Cliente</label>
-          <input id="cli-nome" name="cli-nome" type="text" placeholder="Razão social ou nome" required />
-        </div>
-
-        <div class="campo">
-          <label>CNPJ</label>
-          <input id="cli-cnpj" name="cli-cnpj" type="text" placeholder="00.000.000/0000-00" class="mono" />
-        </div>
-
-        <div class="campo">
-          <label>Telefone</label>
-          <input id="cli-telefone" name="cli-telefone" type="tel" placeholder="(00) 00000-0000" />
-        </div>
-
-        <div class="campo">
-          <label>Este telefone é WhatsApp?</label>
-          <select id="eh-whatsapp" name="eh-whatsapp" onchange="atualizarCampoWhatsApp()">
-            <option value="sim">✅ Sim, é o mesmo número</option>
-            <option value="nao">❌ Não, tenho outro número</option>
-          </select>
-        </div>
-
-        <div id="campo-whatsapp-extra" class="campo" style="display:none">
-          <label>WhatsApp (número diferente)</label>
-          <input id="wpp-extra" name="wpp-extra" type="tel" placeholder="(00) 00000-0000" />
-        </div>
-
-        <div class="campo">
-          <label>Endereço</label>
-          <input id="cli-endereco" name="cli-endereco" type="text" placeholder="Rua, número, cidade" />
-        </div>
-
-        <div class="campo">
-          <label>Banco Utilizado</label>
-          <select id="cli-banco" name="cli-banco">
-            <option value="">— Selecione —</option>
-            <option>Bradesco</option>
-            <option>Itaú</option>
-            <option>Santander</option>
-            <option>Banco do Brasil</option>
-            <option>Caixa Econômica Federal</option>
-            <option>Nubank</option>
-            <option>Inter</option>
-            <option>C6 Bank</option>
-            <option>Sicoob</option>
-            <option>Sicredi</option>
-            <option>BTG Pactual</option>
-            <option>XP</option>
-            <option>Outro</option>
-          </select>
-        </div>
-
-        <button type="submit" class="btn-primario">💾 Salvar cliente</button>
-        <button type="button" class="btn-secundario" onclick="irParaAdmin('clientes-ativos')">Cancelar</button>
-      </form>
+    <div class="sidebar-group">
+      <div class="sidebar-group-lbl">Operações</div>
+      <button class="sidebar-btn" onclick="irPara('notas',this)">
+        <span class="icon">📋</span> Notas Fiscais
+      </button>
+      <button class="sidebar-btn" onclick="irPara('mensageria',this)">
+        <span class="icon">✉️</span> Mensageria
+      </button>
+      <button class="sidebar-btn" onclick="irPara('alertas',this)">
+        <span class="icon">🔔</span> Alertas
+      </button>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-lbl">Financeiro</div>
+      <button class="sidebar-btn" onclick="irPara('financeiro',this)">
+        <span class="icon">💰</span> Gestão Financeira
+      </button>
+      <button class="sidebar-btn" onclick="irPara('relatorios',this)">
+        <span class="icon">📈</span> Relatórios
+      </button>
     </div>
 
-    <!-- Tela: Clientes Ativos -->
-    <div id="admin-clientes-ativos" class="tela-admin">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <h2 class="page-titulo">Clientes Ativos</h2>
-        <button class="btn-primario" style="width:auto;padding:8px 14px;font-size:0.82rem"
-          onclick="irParaAdmin('cadastrar-cliente')">+ Novo</button>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="admin-email-label">—</div>
+      <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="topbar">
+      <div class="topbar-titulo" id="topbar-titulo">Dashboard</div>
+      <button class="btn btn-prim btn-sm" onclick="irPara('cadastro-cliente',null)">➕ Novo Cliente</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="sec-dashboard" class="main-content ativo">
+      <div class="grid-4" id="kpis-dashboard">
+        <div class="kpi"><div class="kpi-label">Total Clientes</div><div id="kpi-clientes" class="kpi-valor ouro">0</div><div class="kpi-sub">cadastrados</div></div>
+        <div class="kpi"><div class="kpi-label">Notas Recebidas</div><div id="kpi-notas" class="kpi-valor">0</div><div class="kpi-sub">este mês</div></div>
+        <div class="kpi"><div class="kpi-label">Total Entradas</div><div id="kpi-entradas" class="kpi-valor verde">R$ 0</div><div class="kpi-sub">acumulado</div></div>
+        <div class="kpi"><div class="kpi-label">Total Saídas</div><div id="kpi-saidas" class="kpi-valor clay">R$ 0</div><div class="kpi-sub">acumulado</div></div>
       </div>
-      <div id="lista-clientes" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="grid-2">
+        <div class="card"><div class="card-titulo">📋 Últimas Notas</div><div id="dash-notas"></div></div>
+        <div class="card"><div class="card-titulo">👥 Clientes Recentes</div><div id="dash-clientes"></div></div>
+      </div>
+      <div class="card"><div class="card-titulo">📊 Fluxo Financeiro Geral</div><canvas id="grafico-admin" height="100"></canvas></div>
     </div>
 
-  </main>
+    <!-- GESTÃO CLIENTES -->
+    <div id="sec-clientes" class="main-content">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="eyebrow" style="margin:0">CLIENTES</div>
+        <div style="flex:1"></div>
+        <div class="search-bar" style="max-width:320px">
+          <input id="busca-cliente" type="text" placeholder="Buscar por nome, CNPJ, email..." oninput="filtrarClientes()"/>
+        </div>
+        <select id="filtro-status-cl" onchange="filtrarClientes()" style="border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-size:0.82rem;outline:none">
+          <option value="">Todos os status</option>
+          <option value="ativo">Ativos</option>
+          <option value="inativo">Inativos</option>
+          <option value="pendente">Pendentes</option>
+        </select>
+      </div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Razão Social</th><th>CNPJ</th><th>E-mail</th><th>Segmento</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tbody-clientes"><tr><td colspan="6" class="vazio">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
 
-</div><!-- /container -->
+    <!-- CADASTRO CLIENTE -->
+    <div id="sec-cadastro-cliente" class="main-content">
+      <div class="eyebrow">CADASTRO</div>
+      <div class="card" style="max-width:700px">
+        <div class="card-titulo">➕ <span id="cadastro-titulo">Novo Cliente</span></div>
+        <form id="form-cliente" style="display:flex;flex-direction:column;gap:16px" onsubmit="salvarClienteForm(event)">
+          <input type="hidden" id="cl-id"/>
+          <div class="grid-2">
+            <div class="campo"><label>Razão Social *</label><input id="cl-razao" required placeholder="Empresa Ltda."/></div>
+            <div class="campo"><label>Nome Fantasia</label><input id="cl-fantasia" placeholder="Nome fantasia"/></div>
+          </div>
+          <div class="grid-2">
+            <div class="campo"><label>CNPJ *</label><input id="cl-cnpj" required placeholder="00.000.000/0000-00" class="mono" maxlength="18"/></div>
+            <div class="campo"><label>Inscrição Estadual</label><input id="cl-ie" placeholder="IE" class="mono"/></div>
+          </div>
+          <div class="grid-2">
+            <div class="campo"><label>E-mail *</label><input id="cl-email" type="email" required placeholder="contato@empresa.com"/></div>
+            <div class="campo"><label>Telefone</label><input id="cl-tel" placeholder="(11) 99999-9999" class="mono"/></div>
+          </div>
+          <div class="grid-2">
+            <div class="campo"><label>WhatsApp</label><input id="cl-wpp" placeholder="5511999999999" class="mono"/></div>
+            <div class="campo"><label>Segmento</label>
+              <select id="cl-segmento">
+                <option value="">— Segmento —</option>
+                <option>Comércio</option><option>Serviços</option><option>Indústria</option>
+                <option>Saúde</option><option>Educação</option><option>Tecnologia</option>
+                <option>Construção</option><option>Logística</option><option>Outro</option>
+              </select>
+            </div>
+          </div>
+          <div class="sep"></div>
+          <div class="grid-3">
+            <div class="campo"><label>CEP</label><input id="cl-cep" placeholder="00000-000" class="mono" onblur="buscarCEP(this)"/></div>
+            <div class="campo" style="grid-column:span 2"><label>Endereço</label><input id="cl-end" placeholder="Rua, número, bairro"/></div>
+          </div>
+          <div class="grid-2">
+            <div class="campo"><label>Cidade</label><input id="cl-cidade" placeholder="São Paulo"/></div>
+            <div class="campo"><label>Estado</label>
+              <select id="cl-estado">
+                <option value="">UF</option>
+                <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+                <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+                <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+                <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+                <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+                <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+                <option selected>SP</option><option>SE</option><option>TO</option>
+              </select>
+            </div>
+          </div>
+          <div class="sep"></div>
+          <div class="grid-2">
+            <div class="campo"><label>Responsável</label><input id="cl-responsavel" placeholder="Nome do responsável"/></div>
+            <div class="campo"><label>Cargo</label><input id="cl-cargo" placeholder="Cargo"/></div>
+          </div>
+          <div class="grid-2">
+            <div class="campo"><label>Data de Início</label><input id="cl-inicio" type="date"/></div>
+            <div class="campo"><label>Plano / Contrato</label>
+              <select id="cl-plano">
+                <option value="">— Selecione —</option>
+                <option value="basico">Básico</option>
+                <option value="intermediario">Intermediário</option>
+                <option value="premium">Premium</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+          </div>
+          <div class="campo"><label>Observações Internas</label><textarea id="cl-obs" placeholder="Notas internas sobre este cliente..."></textarea></div>
+          <div class="campo"><label>Status</label>
+            <select id="cl-status">
+              <option value="ativo">✅ Ativo</option>
+              <option value="pendente">⏳ Pendente</option>
+              <option value="inativo">❌ Inativo</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button type="submit" class="btn btn-prim">💾 Salvar Cliente</button>
+            <button type="button" class="btn btn-sec" onclick="irPara('clientes',null)">Cancelar</button>
+            <button type="button" class="btn btn-sec" onclick="limparFormCliente()">🔄 Limpar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- NOTAS FISCAIS (admin) -->
+    <div id="sec-notas" class="main-content">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="eyebrow" style="margin:0">NOTAS FISCAIS</div>
+        <div style="flex:1"></div>
+        <select id="filtro-status-nota" onchange="filtrarNotasAdmin()" style="border:1.5px solid var(--border);border-radius:9px;padding:7px 12px;font-size:0.82rem;outline:none">
+          <option value="">Todos os status</option>
+          <option value="pendente">Pendentes</option>
+          <option value="aprovada">Aprovadas</option>
+          <option value="rejeitada">Rejeitadas</option>
+        </select>
+        <input id="busca-nota" type="text" placeholder="Buscar emitente..." oninput="filtrarNotasAdmin()"
+               style="border:1.5px solid var(--border);border-radius:9px;padding:7px 12px;font-size:0.82rem;outline:none;max-width:220px"/>
+      </div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Emitente</th><th>Nº Nota</th><th>Valor</th><th>Vencimento</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tbody-notas"><tr><td colspan="8" class="vazio">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MENSAGERIA -->
+    <div id="sec-mensageria" class="main-content">
+      <div class="eyebrow">MENSAGERIA</div>
+      <div class="grid-2">
+        <!-- Envio -->
+        <div class="card">
+          <div class="card-titulo">✉️ Enviar Mensagem</div>
+          <form id="form-msg" style="display:flex;flex-direction:column;gap:12px" onsubmit="enviarMensagemAdmin(event)">
+            <div class="campo">
+              <label>Destinatário</label>
+              <select id="msg-dest">
+                <option value="todos">📢 Todos os clientes</option>
+                <option value="ativos">✅ Apenas clientes ativos</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label>Cliente específico</label>
+              <select id="msg-cliente-id">
+                <option value="">— Selecionar —</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label>Canal</label>
+              <select id="msg-canal">
+                <option value="push">🔔 Push Notification</option>
+                <option value="email">📧 E-mail</option>
+                <option value="whatsapp">💬 WhatsApp</option>
+              </select>
+            </div>
+            <div class="campo"><label>Assunto</label><input id="msg-assunto" placeholder="Assunto da mensagem" required/></div>
+            <div class="campo"><label>Mensagem</label>
+              <textarea id="msg-corpo" placeholder="Digite a mensagem aqui..." required rows="5"></textarea>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="submit" class="btn btn-prim">📤 Enviar</button>
+              <button type="button" class="btn btn-wpp btn-sm" onclick="enviarWppMassa()">💬 WhatsApp</button>
+            </div>
+          </form>
+        </div>
+        <!-- Histórico -->
+        <div class="card">
+          <div class="card-titulo">📨 Mensagens Recebidas dos Clientes</div>
+          <div id="msg-recebidas-lista"><p class="vazio">Carregando...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div id="sec-alertas" class="main-content">
+      <div class="eyebrow">ALERTAS AUTOMÁTICOS</div>
+      <div class="card" style="max-width:560px">
+        <div class="card-titulo">⚙️ Configurações de Alertas</div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="campo">
+            <label>Valor mínimo para alerta de nota (R$)</label>
+            <input id="alerta-valor" type="number" value="10000" class="mono"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.85rem">
+              <input type="checkbox" id="alerta-venc" checked style="width:16px;height:16px;accent-color:var(--verde)"/>
+              Alertar notas próximas ao vencimento (7 dias)
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.85rem">
+              <input type="checkbox" id="alerta-wpp" checked style="width:16px;height:16px;accent-color:var(--verde)"/>
+              Enviar alertas por WhatsApp
+            </label>
+          </div>
+          <button class="btn btn-prim btn-sm" onclick="salvarAlertas()">💾 Salvar Configurações</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-titulo">🔔 Notas a Vencer nos Próximos 7 Dias</div>
+        <div id="alertas-lista"><p class="vazio">Carregando...</p></div>
+      </div>
+    </div>
+
+    <!-- FINANCEIRO ADMIN -->
+    <div id="sec-financeiro" class="main-content">
+      <div class="eyebrow">GESTÃO FINANCEIRA</div>
+      <div class="card">
+        <div class="card-titulo">💰 Lançamentos Internos (Helmigui)</div>
+        <form id="form-fin" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px" onsubmit="adicionarLancFin(event)">
+          <div class="campo"><label>Tipo</label>
+            <select id="fin-tipo"><option value="entrada">🟢 Entrada</option><option value="saida">🔴 Saída</option></select>
+          </div>
+          <div class="campo"><label>Valor</label><input id="fin-valor" type="number" step="0.01" min="0.01" required class="mono"/></div>
+          <div class="campo"><label>Descrição</label><input id="fin-desc" required placeholder="Ex: Honorários"/></div>
+          <div class="campo"><label>Categoria</label>
+            <select id="fin-cat">
+              <option>Honorários</option><option>Salários</option><option>Aluguel</option>
+              <option>Impostos</option><option>Marketing</option><option>Tecnologia</option><option>Outro</option>
+            </select>
+          </div>
+          <div class="campo"><label>Data</label><input id="fin-data" type="date" required/></div>
+          <div class="campo" style="align-self:flex-end">
+            <button type="submit" class="btn btn-prim btn-sm btn-full">Registrar</button>
+          </div>
+        </form>
+        <div class="tabela-wrap">
+          <table><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-fin"><tr><td colspan="6" class="vazio">Nenhum lançamento.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RELATÓRIOS ADMIN -->
+    <div id="sec-relatorios" class="main-content">
+      <div class="eyebrow">RELATÓRIOS</div>
+      <div class="card" style="max-width:500px">
+        <div class="card-titulo">📊 Gerar Relatórios</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="campo"><label>Cliente</label>
+            <select id="rel-cliente-id">
+              <option value="">Todos os clientes</option>
+            </select>
+          </div>
+          <div class="grid-2">
+            <div class="campo"><label>De</label><input id="rel-de" type="date"/></div>
+            <div class="campo"><label>Até</label><input id="rel-ate" type="date"/></div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-prim btn-sm" onclick="exportarAdmin('fluxo','pdf')">💰 Fluxo PDF</button>
+            <button class="btn btn-sec btn-sm" onclick="exportarAdmin('fluxo','excel')">💰 Fluxo Excel</button>
+            <button class="btn btn-prim btn-sm" onclick="exportarAdmin('dre','pdf')">📈 DRE PDF</button>
+            <button class="btn btn-sec btn-sm" onclick="exportarAdmin('notas','excel')">📋 Notas Excel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /admin-shell -->
+
+<!-- ═══ MODAL DETALHE NOTA ════════════════════════════════════════════════════ -->
+<div id="modal-nota" class="modal-bg" onclick="if(event.target===this)fecharModal('modal-nota')">
+  <div class="modal">
+    <div class="modal-titulo">
+      📋 Detalhe da Nota
+      <button class="modal-fechar" onclick="fecharModal('modal-nota')">✕</button>
+    </div>
+    <div id="modal-nota-corpo" style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem"></div>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap" id="modal-nota-acoes"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL DETALHE CLIENTE ══════════════════════════════════════════════════ -->
+<div id="modal-cliente" class="modal-bg" onclick="if(event.target===this)fecharModal('modal-cliente')">
+  <div class="modal">
+    <div class="modal-titulo">
+      👤 Detalhes do Cliente
+      <button class="modal-fechar" onclick="fecharModal('modal-cliente')">✕</button>
+    </div>
+    <div id="modal-cliente-corpo" style="font-size:0.85rem"></div>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap" id="modal-cliente-acoes"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
 
 <script src="config.js"></script>
+<script src="firebase.js"></script>
+<script src="reports.js"></script>
 <script src="admin.js"></script>
-
-<script>
-// Sincroniza overlay com menu
-const _toggleMenu = toggleMenu;
-window.toggleMenu = function() {
-  _toggleMenu();
-  const menu = document.getElementById('menu-lateral');
-  const overlay = document.getElementById('overlay');
-  overlay.classList.toggle('visivel', menu.classList.contains('aberto'));
-};
-const _fecharMenu = fecharMenu;
-window.fecharMenu = function() {
-  _fecharMenu();
-  document.getElementById('overlay').classList.remove('visivel');
-};
-
-// Destaca item ativo no menu
-const _irParaAdmin = irParaAdmin;
-window.irParaAdmin = function(tela) {
-  _irParaAdmin(tela);
-  document.querySelectorAll('.submenu-item').forEach(b => b.style.fontWeight = '');
-  const mapa = { 'cadastrar-cliente': 0, 'clientes-ativos': 1 };
-  const idx = mapa[tela];
-  if (idx !== undefined) {
-    const itens = document.querySelectorAll('.submenu-item');
-    if (itens[idx]) itens[idx].style.fontWeight = '700';
-  }
-};
-
-// Mantém submenu aberto em desktop
-function verificarDesktop() {
-  if (window.innerWidth >= 900) {
-    document.getElementById('menu-lateral').classList.add('aberto');
-    document.getElementById('submenu-cliente').classList.add('aberto');
-    document.getElementById('btn-menu-cliente').classList.add('expandido');
-  }
-}
-verificarDesktop();
-window.addEventListener('resize', verificarDesktop);
-</script>
-
 </body>
 </html>

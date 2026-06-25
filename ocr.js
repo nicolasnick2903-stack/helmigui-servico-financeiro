@@ -1,130 +1,136 @@
-// ── ocr.js — OCR via Tesseract.js + heurísticas para extração de dados da nota ──
+// ── ocr.js — OCR Tesseract.js + classificação inteligente ────────────────────
 
 let tesseractWorker = null;
 
-/**
- * Inicializa o worker do Tesseract com idioma português.
- * Carregamento ocorre uma única vez.
- */
 async function iniciarTesseract() {
   if (tesseractWorker) return tesseractWorker;
   tesseractWorker = await Tesseract.createWorker("por", 1, {
     logger: (m) => {
       if (m.status === "recognizing text") {
-        const progresso = Math.round((m.progress || 0) * 100);
+        const p = Math.round((m.progress || 0) * 100);
         const el = document.getElementById("ocr-progresso");
-        if (el) el.textContent = `OCR: ${progresso}%`;
+        if (el) el.textContent = `OCR: ${p}%`;
       }
     },
   });
   return tesseractWorker;
 }
 
-/**
- * Roda OCR em uma imagem (File, Blob ou URL de objeto).
- * @param {File|Blob|string} origem
- * @returns {Promise<string>} texto bruto reconhecido
- */
 async function rodarOCR(origem) {
   const worker = await iniciarTesseract();
   const { data } = await worker.recognize(origem);
   return data.text || "";
 }
 
-// ── Heurísticas de extração ───────────────────────────────────────────────────
+// ── Extração de campos ────────────────────────────────────────────────────────
 
-/**
- * Tenta encontrar o número da nota fiscal no texto reconhecido.
- * Padrões comuns: "Nº 000123", "Número: 123", "NF 456", "000.456"
- * @param {string} texto
- * @returns {string}
- */
-function extrairNumeroNota(texto) {
+function extrairNumeroNota(t) {
   const padroes = [
     /n[uúo]mero\s*:?\s*(\d[\d.\/\-]{1,20})/i,
     /n[oº°]\s*\.?\s*(\d[\d.\/\-]{1,20})/i,
-    /nf[se]?[-\s]*e?\s*n[oº°]?\s*(\d[\d.\/\-]{1,20})/i,
-    /\bnota\s+fiscal\s+n[oº°]?\s*:?\s*(\d[\d.\/\-]{1,10})/i,
-    /\b(\d{3,6})\b/,  // fallback: sequência de 3-6 dígitos
+    /nf[se]?[-\s]*e?\s*n[oº°]?\s*(\d[\d.\/\-]{1,10})/i,
+    /nota\s+fiscal\s+n[oº°]?\s*:?\s*(\d{1,10})/i,
+    /\b(\d{4,8})\b/,
   ];
-
-  for (const regex of padroes) {
-    const m = texto.match(regex);
-    if (m) return m[1].trim();
-  }
+  for (const r of padroes) { const m = t.match(r); if (m) return m[1].trim(); }
   return "";
 }
 
-/**
- * Tenta encontrar o nome do emissor/razão social no texto.
- * Geralmente está nas primeiras linhas, antes de "CNPJ" ou "Inscrição".
- * @param {string} texto
- * @returns {string}
- */
-function extrairEmissor(texto) {
-  const linhas = texto.split("\n").map((l) => l.trim()).filter(Boolean);
-
-  // Procura linha antes de "CNPJ" ou "CPF" — costuma ser o nome da empresa
+function extrairEmissor(t) {
+  const linhas = t.split("\n").map(l => l.trim()).filter(Boolean);
   for (let i = 1; i < linhas.length; i++) {
-    if (/cnpj|cpf|inscri/i.test(linhas[i])) {
-      return linhas[i - 1];
+    if (/cnpj|cpf|inscri/i.test(linhas[i])) return linhas[i - 1];
+  }
+  return linhas.find(l => l.length > 8 && /[a-zA-Z]{3}/.test(l)) || "";
+}
+
+function extrairCNPJ(t) {
+  const m = t.match(/\d{2}[.\s]?\d{3}[.\s]?\d{3}[\/\s]?\d{4}[-\s]?\d{2}/);
+  return m ? m[0].replace(/\s/g, "") : "";
+}
+
+function extrairValor(t) {
+  const padroes = [
+    /valor\s+total\s*:?\s*R?\$?\s*([\d.,]+)/i,
+    /total\s+do\s+documento\s*:?\s*R?\$?\s*([\d.,]+)/i,
+    /total\s+da\s+nota\s*:?\s*R?\$?\s*([\d.,]+)/i,
+    /R\$\s*([\d.]+,\d{2})/i,
+  ];
+  for (const r of padroes) {
+    const m = t.match(r);
+    if (m) {
+      const raw = m[1].replace(/\./g, "").replace(",", ".");
+      const n = parseFloat(raw);
+      if (!isNaN(n) && n > 0) return n;
     }
   }
-
-  // Fallback: primeira linha com mais de 5 caracteres
-  return linhas.find((l) => l.length > 5) || "";
+  return 0;
 }
 
-/**
- * Detecta o tipo da nota a partir de palavras-chave no texto.
- * Retorna "Serviço", "Material" ou "" (indeterminado).
- * @param {string} texto
- * @returns {"Serviço"|"Material"|""}
- */
-function detectarTipoNota(texto) {
-  const t = texto.toUpperCase();
-
-  const palavrasServico = ["NFS-E", "NOTA FISCAL DE SERVIÇOS", "ISS", "ISSQN", "NOTA FISCAL DE SERVIÇO"];
-  const palavrasMaterial = ["NF-E", "NOTA FISCAL ELETRÔNICA DE PRODUTOS", "ICMS", "DANFE", "NOTA FISCAL DE PRODUTOS"];
-
-  let pontoServico = 0;
-  let pontoMaterial = 0;
-
-  for (const p of palavrasServico) if (t.includes(p)) pontoServico++;
-  for (const p of palavrasMaterial) if (t.includes(p)) pontoMaterial++;
-
-  if (pontoServico > pontoMaterial) return "Serviço";
-  if (pontoMaterial > pontoServico) return "Material";
-  return ""; // não conseguiu determinar — usuário seleciona manualmente
+function extrairDataEmissao(t) {
+  const m = t.match(/(?:data\s+de\s+emiss[aã]o|emiss[aã]o)\s*:?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i)
+         || t.match(/(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4})/);
+  return m ? m[1].replace(/[-\.]/g, "/") : "";
 }
 
-/**
- * Tenta extrair data de vencimento do texto via OCR (fallback quando não há código de barras).
- * Padrões: "Vencimento: 31/12/2024", "Venc. 31/12/24"
- * @param {string} texto
- * @returns {string}
- */
-function extrairVencimentoOCR(texto) {
-  const m = texto.match(/venc[ie]?\.?\s*:?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i);
-  if (m) {
-    // Normaliza para DD/MM/AAAA
-    return m[1].replace(/[-\.]/g, "/");
-  }
+function extrairVencimento(t) {
+  const m = t.match(/venc[ie]?\.?\s*:?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i);
+  return m ? m[1].replace(/[-\.]/g, "/") : "";
+}
+
+// ── Classificação inteligente (tipo + categoria) ──────────────────────────────
+
+function classificarTipo(t) {
+  const T = t.toUpperCase();
+  const servico  = ["NFS-E", "NOTA FISCAL DE SERVIÇOS", "ISS", "ISSQN", "PRESTAÇÃO DE SERVIÇOS", "TOMADOR"];
+  const material = ["NF-E", "DANFE", "ICMS", "NOTA FISCAL DE PRODUTOS", "PRODUTO", "MERCADORIA"];
+  let ps = 0, pm = 0;
+  servico.forEach(p  => T.includes(p) && ps++);
+  material.forEach(p => T.includes(p) && pm++);
+  if (ps > pm) return "Serviço";
+  if (pm > ps) return "Produto";
   return "";
 }
 
-/**
- * Função principal: roda OCR e retorna os campos extraídos.
- * @param {File|Blob|string} origem
- * @returns {Promise<{ numero, emissor, tipo, vencimentoOCR, textoCompleto }>}
- */
+function classificarCategoria(t, tipo) {
+  const T = t.toUpperCase();
+  if (/folha|salário|fgts|inss|rescis/i.test(T))      return "Folha de Pagamento";
+  if (/aluguel|locaç|imóvel/i.test(T))                 return "Aluguel";
+  if (/energia|luz|água|internet|telefone/i.test(T))   return "Utilidades";
+  if (/transport|frete|entrega|logíst/i.test(T))       return "Transporte";
+  if (/marketing|publicidad|propaganda/i.test(T))      return "Marketing";
+  if (/material|escritório|informát/i.test(T))         return "Material de Escritório";
+  if (/consultoria|assessoria/i.test(T))               return "Consultoria";
+  if (/manutenção|reparo|assist/i.test(T))             return "Manutenção";
+  if (/imposto|taxa|tributo|guia/i.test(T))            return "Impostos e Taxas";
+  if (tipo === "Serviço")  return "Serviço";
+  if (tipo === "Produto")  return "Fornecedor / Produto";
+  return "Despesa Operacional";
+}
+
+function classificarFluxo(categoria, tipo) {
+  // Notas fiscais recebidas são geralmente saídas (contas a pagar)
+  // Mas se o emitente é o próprio cliente, é entrada
+  const cats_entrada = ["Receita", "Venda"];
+  if (cats_entrada.includes(categoria)) return "entrada";
+  return "saida";
+}
+
+// ── Função principal ──────────────────────────────────────────────────────────
 async function processarImagemOCR(origem) {
   const texto = await rodarOCR(origem);
+  const tipo = classificarTipo(texto);
+  const categoria = classificarCategoria(texto, tipo);
   return {
-    numero: extrairNumeroNota(texto),
-    emissor: extrairEmissor(texto),
-    tipo: detectarTipoNota(texto),
-    vencimentoOCR: extrairVencimentoOCR(texto),
+    numero:       extrairNumeroNota(texto),
+    emissor:      extrairEmissor(texto),
+    cnpjEmitente: extrairCNPJ(texto),
+    valor:        extrairValor(texto),
+    dataEmissao:  extrairDataEmissao(texto),
+    vencimento:   extrairVencimento(texto),
+    tipo,
+    categoria,
+    fluxo:        classificarFluxo(categoria, tipo),
     textoCompleto: texto,
   };
 }

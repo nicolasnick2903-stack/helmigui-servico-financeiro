@@ -1,527 +1,647 @@
-// ── app.js — Estado, telas e fluxo principal do app cliente Helmigui ─────────
+// ── app.js — Portal do Cliente Helmigui ───────────────────────────────────────
 
 // ── Estado global ─────────────────────────────────────────────────────────────
-const Estado = {
-  telaAtual: "home",
-  stream: null,            // MediaStream da câmera
-  imagemCapturada: null,   // Blob/File da foto capturada para OCR
-  dadosExtracao: {},       // Dados mesclados (barcode + OCR) antes da confirmação
+const App = {
+  uid: null,
+  email: null,
+  clienteId: null,
+  cliente: null,
+  notas: [],
+  lancamentos: [],
+  mensagens: [],
+  periodoFluxo: "mes",
+  graficoDash: null,
+  streamCamera: null,
+  cameraFacingMode: "environment",
+  barcodeInterval: null,
+  canvas: null,
+  ctx: null,
 };
 
-// ── Persistência (localStorage) ───────────────────────────────────────────────
-function salvarNotas(notas) {
-  localStorage.setItem("helmigui_notas", JSON.stringify(notas));
-}
-function carregarNotas() {
-  return JSON.parse(localStorage.getItem("helmigui_notas") || "[]");
-}
-function salvarLancamentos(lancs) {
-  localStorage.setItem("helmigui_lancamentos", JSON.stringify(lancs));
-}
-function carregarLancamentos() {
-  return JSON.parse(localStorage.getItem("helmigui_lancamentos") || "[]");
-}
+// ── Inicialização ──────────────────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", () => {
+  initFirebase();
+  onAuthChange(async (user) => {
+    if (user) {
+      App.uid   = user.uid;
+      App.email = user.email;
+      await carregarSessao(user);
+    } else {
+      mostrarLogin();
+    }
+  });
 
-// ── Navegação entre telas ─────────────────────────────────────────────────────
-function irPara(tela) {
-  pararCamera();
-  Estado.telaAtual = tela;
-  document.querySelectorAll(".tela").forEach((t) => t.classList.remove("ativa"));
-  const el = document.getElementById("tela-" + tela);
-  if (el) el.classList.add("ativa");
+  App.canvas = document.createElement("canvas");
+  App.ctx    = App.canvas.getContext("2d");
 
-  // Renderiza a tela conforme necessário
-  if (tela === "notas") renderizarListaNotas();
-  if (tela === "fluxo") renderizarFluxo();
-}
+  document.getElementById("form-conf").addEventListener("submit", confirmarNota);
 
-// ── Câmera ────────────────────────────────────────────────────────────────────
-async function abrirCamera() {
-  irPara("camera");
-  const video = document.getElementById("video-camera");
-  const btnCapturar = document.getElementById("btn-capturar");
-  btnCapturar.disabled = true;
+  // Datas default para relatório (mês atual)
+  const hoje = new Date();
+  const y = hoje.getFullYear(), m = String(hoje.getMonth() + 1).padStart(2, "0");
+  const ultimoDia = new Date(y, hoje.getMonth() + 1, 0).getDate();
+  setVal("rel-de",   `${y}-${m}-01`);
+  setVal("rel-ate",  `${y}-${m}-${String(ultimoDia).padStart(2, "0")}`);
+  setVal("lanc-data", hoje.toISOString().split("T")[0]);
+});
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function fazerLogin() {
+  const email = v("login-email").trim();
+  const senha = v("login-senha");
+  const erroEl = document.getElementById("login-erro");
+  const btn    = document.getElementById("btn-login");
+
+  erroEl.style.display = "none";
+  if (!email || !senha) { mostrarErroLogin("Preencha e-mail e senha."); return; }
+
+  btn.disabled    = true;
+  btn.textContent = "Entrando...";
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } },
-      audio: false,
-    });
-    Estado.stream = stream;
-    video.srcObject = stream;
-    await video.play();
-    btnCapturar.disabled = false;
-
-    // Leitura contínua automática de código de barras
-    iniciarLeitorContinuo(video, (dadosBarcode) => {
-      Estado.dadosExtracao = { ...Estado.dadosExtracao, ...dadosBarcode };
-      capturarFrameEProcessar(video);
-    });
-  } catch (err) {
-    mostrarErroCamera(err);
+    const user = await loginComEmail(email, senha);
+    if (isAdmin(user.email)) { window.location.href = "admin.html"; return; }
+    App.uid   = user.uid;
+    App.email = user.email;
+    await carregarSessao(user);
+  } catch (e) {
+    const msgs = {
+      "auth/invalid-credential":     "E-mail ou senha incorretos.",
+      "auth/user-not-found":         "Usuário não encontrado.",
+      "auth/wrong-password":         "Senha incorreta.",
+      "auth/too-many-requests":      "Muitas tentativas. Aguarde.",
+      "auth/network-request-failed": "Sem conexão com a internet.",
+    };
+    mostrarErroLogin(msgs[e.code] || "Erro ao entrar. Tente novamente.");
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = "Entrar";
   }
+}
+
+function mostrarErroLogin(msg) {
+  const el = document.getElementById("login-erro");
+  el.textContent    = msg;
+  el.style.display  = "block";
+}
+
+async function carregarSessao(user) {
+  if (isAdmin(user.email)) { window.location.href = "admin.html"; return; }
+  try {
+    const todos   = await buscarClientes(true);
+    App.cliente   = todos.find(c => c.uid === user.uid || c.email === user.email) || null;
+    App.clienteId = App.cliente?.id || user.uid;
+  } catch {
+    App.clienteId = user.uid;
+  }
+  mostrarApp();
+  await Promise.all([carregarDados(), carregarMensagens()]);
+  renderDashboard();
+}
+
+async function carregarDados() {
+  try {
+    App.notas       = await buscarNotas(App.clienteId);
+    App.lancamentos = await buscarLancamentos(App.clienteId);
+  } catch { App.notas = []; App.lancamentos = []; }
+}
+
+async function carregarMensagens() {
+  try {
+    App.mensagens = await buscarMensagens(App.clienteId);
+    const naoLidas = App.mensagens.filter(m => !m.lida).length;
+    const badge    = document.getElementById("badge-msg");
+    badge.style.display  = naoLidas > 0 ? "flex" : "none";
+    badge.textContent    = naoLidas;
+  } catch { App.mensagens = []; }
+}
+
+function mostrarLogin() {
+  document.getElementById("topbar").style.display = "none";
+  document.getElementById("nav-inf").style.display = "none";
+  irParaTela("login");
+}
+
+function mostrarApp() {
+  const nome = App.cliente?.razaoSocial || App.email?.split("@")[0] || "Cliente";
+  document.getElementById("topbar-titulo").textContent = nome;
+  document.getElementById("user-avatar").textContent   = nome[0].toUpperCase();
+  document.getElementById("topbar").style.display = "flex";
+  document.getElementById("nav-inf").style.display = "flex";
+  irPara("dashboard");
+}
+
+async function confirmarLogout() {
+  if (!confirm("Deseja sair da sua conta?")) return;
+  pararCamera();
+  await logout();
+  mostrarLogin();
+}
+
+// ── Navegação ─────────────────────────────────────────────────────────────────
+const TODAS_TELAS = ["login","dashboard","scanner","processando","confirmacao","fluxo","notas","relatorios","mensagens"];
+
+function irParaTela(id) {
+  TODAS_TELAS.forEach(t => {
+    const el = document.getElementById("tela-" + t);
+    if (!el) return;
+    el.classList.remove("ativa");
+    el.style.display = "";
+  });
+  const alvo = document.getElementById("tela-" + id);
+  if (alvo) { alvo.style.display = "flex"; alvo.classList.add("ativa"); }
+}
+
+function irPara(secao) {
+  if (secao !== "scanner" && secao !== "processando") pararCamera();
+  irParaTela(secao);
+  if (secao === "dashboard")  renderDashboard();
+  if (secao === "fluxo")      renderFluxo();
+  if (secao === "notas")      renderNotas("todas");
+  if (secao === "mensagens")  renderMensagens();
+  if (secao === "scanner")    iniciarCamera();
+}
+
+function ativarNav(btn) {
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("ativo"));
+  btn.classList.add("ativo");
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const agora    = new Date();
+  const lancMes  = App.lancamentos.filter(l => {
+    const d = new Date(l.data || l.criadoEm || 0);
+    return d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear();
+  });
+
+  const entradas = somarPor(lancMes, "entrada");
+  const saidas   = somarPor(lancMes, "saida");
+  const saldo    = entradas - saidas;
+
+  const notasPend = App.notas.filter(n => (n.status || "pendente") === "pendente");
+  const vlPagar   = somarPor(notasPend.filter(n => n.fluxo !== "entrada"), null, "valor");
+  const vlReceber = somarPor(notasPend.filter(n => n.fluxo === "entrada"), null, "valor");
+
+  el("dash-saldo").textContent = fmt(saldo);
+  el("dash-saldo").className   = "saldo-valor " + (saldo >= 0 ? "pos" : "neg");
+  el("dash-ent").textContent   = fmt(entradas);
+  el("dash-sai").textContent   = fmt(saidas);
+  el("dash-pagar").textContent  = fmt(vlPagar);
+  el("dash-receber").textContent = fmt(vlReceber);
+  el("dash-pagar-qtd").textContent  = notasPend.filter(n => n.fluxo !== "entrada").length + " pendentes";
+  el("dash-receber-qtd").textContent = notasPend.filter(n => n.fluxo === "entrada").length + " pendentes";
+
+  renderGraficoDash();
+  renderUltimasNotas();
+}
+
+function renderGraficoDash() {
+  const canvas = document.getElementById("grafico-dash");
+  if (!canvas) return;
+  const hoje = new Date();
+  const meses = [], ents = [], sais = [];
+  for (let i = 5; i >= 0; i--) {
+    const d   = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    const mes = d.getMonth(), ano = d.getFullYear();
+    meses.push(d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""));
+    const lm = App.lancamentos.filter(l => {
+      const ld = new Date(l.data || l.criadoEm || 0);
+      return ld.getMonth() === mes && ld.getFullYear() === ano;
+    });
+    ents.push(somarPor(lm, "entrada"));
+    sais.push(somarPor(lm, "saida"));
+  }
+  if (App.graficoDash) App.graficoDash.destroy();
+  App.graficoDash = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: meses,
+      datasets: [
+        { label: "Entradas", data: ents, backgroundColor: "rgba(26,122,74,.75)", borderRadius: 5 },
+        { label: "Saídas",   data: sais, backgroundColor: "rgba(168,71,46,.65)", borderRadius: 5 },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { font: { family: "Inter", size: 11 } } } },
+      scales: {
+        y: { ticks: { callback: n => n >= 1000 ? "R$" + (n/1000).toFixed(0) + "k" : "R$" + n, font: { size: 10 } } },
+        x: { ticks: { font: { size: 10 } } },
+      },
+    },
+  });
+}
+
+function renderUltimasNotas() {
+  const cont    = el("dash-notas-lista");
+  const ultimas = App.notas.slice(0, 4);
+  if (!ultimas.length) { cont.innerHTML = '<p class="vazio">Nenhuma nota ainda.</p>'; return; }
+  cont.innerHTML = ultimas.map(n => `
+    <div class="conta-item">
+      <div style="flex:1;min-width:0">
+        <div class="conta-desc">${esc(n.emissor || "Sem emitente")}</div>
+        <div class="conta-data">${fmtDataStr(n.dataEmissao || n.criadoEm)} ·
+          <span class="status-pill ${pillClass(n.status)}">${n.status || "pendente"}</span></div>
+      </div>
+      <div class="conta-val sai">${fmt(n.valor)}</div>
+    </div>`).join("");
+}
+
+// ── Câmera / Scanner ──────────────────────────────────────────────────────────
+async function iniciarCamera() {
+  pararCamera();
+  const video = document.getElementById("video-camera");
+  const msgEl = document.getElementById("msg-camera");
+  const btn   = document.getElementById("btn-capturar");
+  const hint  = document.getElementById("camera-hint");
+  msgEl.style.display = "none";
+  btn.disabled = true;
+  try {
+    App.streamCamera = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: App.cameraFacingMode, width: { ideal: 1280 } },
+    });
+    video.srcObject = App.streamCamera;
+    await video.play();
+    btn.disabled = false;
+    iniciarBarcodeLoop(video, hint);
+  } catch {
+    msgEl.textContent   = "Câmera indisponível. Use o upload de imagem abaixo.";
+    msgEl.style.display = "block";
+  }
+}
+
+function iniciarBarcodeLoop(video, hintEl) {
+  if (typeof ZXing === "undefined") return;
+  try {
+    const reader = new ZXing.BrowserMultiFormatReader();
+    hintEl.textContent = "🔍 Buscando código de barras...";
+    App.barcodeInterval = setInterval(async () => {
+      if (!App.streamCamera || !video.videoWidth) return;
+      App.canvas.width  = video.videoWidth;
+      App.canvas.height = video.videoHeight;
+      App.ctx.drawImage(video, 0, 0);
+      try {
+        const result = await reader.decodeFromCanvas(App.canvas);
+        if (result?.getText()) {
+          clearInterval(App.barcodeInterval);
+          hintEl.textContent = "✅ Código lido!";
+          await processarBarcode(result.getText(), App.canvas.toDataURL("image/jpeg", 0.9));
+        }
+      } catch { /* ainda buscando */ }
+    }, 600);
+  } catch { /* ZXing indisponível */ }
 }
 
 function pararCamera() {
-  pararLeitorContinuo();
-  if (Estado.stream) {
-    Estado.stream.getTracks().forEach((t) => t.stop());
-    Estado.stream = null;
+  clearInterval(App.barcodeInterval);
+  App.barcodeInterval = null;
+  if (App.streamCamera) {
+    App.streamCamera.getTracks().forEach(t => t.stop());
+    App.streamCamera = null;
   }
-}
-
-function mostrarErroCamera(err) {
-  const msg = document.getElementById("msg-camera");
-  if (!msg) return;
-  if (err.name === "NotAllowedError") {
-    msg.textContent = "Permissão de câmera negada. Use o botão 'Enviar foto' abaixo.";
-  } else {
-    msg.textContent = "Câmera indisponível. Use o botão 'Enviar foto'.";
-  }
-  msg.style.display = "block";
-}
-
-// ── Captura manual de frame e processamento ───────────────────────────────────
-async function capturarFrameManual() {
   const video = document.getElementById("video-camera");
-  if (!video.srcObject) return;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0);
-
-  canvas.toBlob(async (blob) => {
-    Estado.imagemCapturada = blob;
-    await capturarFrameEProcessar(video);
-  }, "image/jpeg", 0.92);
+  if (video) video.srcObject = null;
 }
 
-async function capturarFrameEProcessar(video) {
+function alternarCamera() {
+  App.cameraFacingMode = App.cameraFacingMode === "environment" ? "user" : "environment";
+  iniciarCamera();
+}
+
+async function capturarFoto() {
+  const video = document.getElementById("video-camera");
+  if (!video?.videoWidth) return;
+  App.canvas.width  = video.videoWidth;
+  App.canvas.height = video.videoHeight;
+  App.ctx.drawImage(video, 0, 0);
+  const dataUrl = App.canvas.toDataURL("image/jpeg", 0.92);
   pararCamera();
-  irPara("processando");
-
-  // Captura frame se ainda não tiver imagem
-  if (!Estado.imagemCapturada) {
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext("2d").drawImage(video, 0, 0);
-    Estado.imagemCapturada = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.92));
-  }
-
-  await processarImagem(Estado.imagemCapturada);
+  await processarImagem(dataUrl);
 }
 
-// ── Upload de arquivo ─────────────────────────────────────────────────────────
-async function processarUpload(arquivo) {
-  Estado.imagemCapturada = arquivo;
-  irPara("processando");
-  await processarImagem(arquivo);
+async function processarArquivo(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => { pararCamera(); await processarImagem(e.target.result); };
+  reader.readAsDataURL(file);
+  input.value = "";
 }
 
-// ── Processamento principal (barcode + OCR) ───────────────────────────────────
-async function processarImagem(origem) {
-  const status = document.getElementById("status-processando");
-
+async function processarBarcode(codigo, imagemDataUrl) {
+  pararCamera();
+  irParaTela("processando");
+  el("status-proc").textContent = "Código lido! Analisando nota...";
   try {
-    // 1. Tenta ler código de barras
-    if (status) status.textContent = "Lendo código de barras...";
-    const dadosBarcode = await lerCodigoDeImagem(origem);
-    if (dadosBarcode) {
-      Estado.dadosExtracao = { ...Estado.dadosExtracao, ...dadosBarcode };
+    const dadosBarcode = decodificarBoleto(codigo);
+    el("status-proc").textContent = "Extraindo texto com IA...";
+    const dadosOCR = await processarImagemOCR(imagemDataUrl);
+    preencherConfirmacao({ ...dadosOCR, ...dadosBarcode });
+    irParaTela("confirmacao");
+  } catch { toast("Erro ao processar. Tente novamente."); irPara("scanner"); }
+}
+
+async function processarImagem(dataUrl) {
+  irParaTela("processando");
+  el("status-proc").textContent = "Iniciando OCR...";
+  el("ocr-progresso").textContent = "";
+  try {
+    // Tenta barcode primeiro
+    if (typeof ZXing !== "undefined") {
+      try {
+        const reader = new ZXing.BrowserMultiFormatReader();
+        const img = new Image();
+        await new Promise(res => { img.onload = res; img.src = dataUrl; });
+        const tmp = document.createElement("canvas");
+        tmp.width = img.width; tmp.height = img.height;
+        tmp.getContext("2d").drawImage(img, 0, 0);
+        const result = await reader.decodeFromCanvas(tmp);
+        if (result?.getText()) {
+          el("status-proc").textContent = "Código de barras encontrado!";
+          const dadosB   = decodificarBoleto(result.getText());
+          const dadosOCR = await processarImagemOCR(dataUrl);
+          preencherConfirmacao({ ...dadosOCR, ...dadosB });
+          irParaTela("confirmacao");
+          return;
+        }
+      } catch { /* sem barcode */ }
     }
+    el("status-proc").textContent = "Extraindo texto com IA...";
+    const dados = await processarImagemOCR(dataUrl);
+    preencherConfirmacao(dados);
+    irParaTela("confirmacao");
+  } catch { toast("Erro no processamento."); irPara("scanner"); }
+}
 
-    // 2. Roda OCR
-    if (status) status.textContent = "Reconhecendo texto (OCR)...";
-    const dadosOCR = await processarImagemOCR(origem);
-    Estado.dadosExtracao = { ...Estado.dadosExtracao, ...dadosOCR };
-
-    // Usa vencimento do barcode se disponível, senão tenta do OCR
-    if (!Estado.dadosExtracao.vencimento && Estado.dadosExtracao.vencimentoOCR) {
-      Estado.dadosExtracao.vencimento = Estado.dadosExtracao.vencimentoOCR;
+function decodificarBoleto(codigo) {
+  const c = codigo.replace(/\D/g, "");
+  let valor = 0, vencimento = "";
+  if (c.length === 47 || c.length === 48) {
+    const fator = parseInt(c.slice(33, 37));
+    valor = parseInt(c.slice(37, 47)) / 100;
+    if (fator > 1000) {
+      const base = new Date(1997, 9, 7);
+      base.setDate(base.getDate() + fator);
+      vencimento = base.toLocaleDateString("pt-BR");
     }
-
-    irPara("confirmacao");
-    preencherFormularioConfirmacao(Estado.dadosExtracao);
-  } catch (err) {
-    console.error("Erro no processamento:", err);
-    if (status) status.textContent = "Erro ao processar. Tente novamente.";
-    setTimeout(() => irPara("home"), 2500);
+  } else if (c.length === 44) {
+    valor = parseInt(c.slice(9, 19)) / 100;
   }
+  return { valor: valor || 0, vencimento, codigoBarras: codigo };
 }
 
-// ── Tela de confirmação ───────────────────────────────────────────────────────
-function preencherFormularioConfirmacao(dados) {
-  document.getElementById("conf-numero").value = dados.numero || "";
-  document.getElementById("conf-emissor").value = dados.emissor || "";
-  document.getElementById("conf-vencimento").value = dados.vencimento || "";
-  document.getElementById("conf-valor").value = dados.valorNumerico
-    ? dados.valorNumerico.toFixed(2).replace(".", ",")
-    : "";
-
-  // Tipo: pré-seleciona se detectado, senão deixa em branco
-  const selectTipo = document.getElementById("conf-tipo");
-  selectTipo.value = dados.tipo || "";
+function preencherConfirmacao(dados) {
+  setVal("cf-numero",    dados.numero       || "");
+  setVal("cf-emissao",   dados.dataEmissao  || "");
+  setVal("cf-emissor",   dados.emissor      || "");
+  setVal("cf-cnpj",      dados.cnpjEmitente || "");
+  setVal("cf-valor",     dados.valor        || "");
+  setVal("cf-venc",      dados.vencimento   || "");
+  setVal("cf-tipo",      dados.tipo         || "");
+  setVal("cf-fluxo",     dados.fluxo        || "saida");
+  setVal("cf-categoria", dados.categoria    || "");
+  setVal("cf-obs",       "");
 }
 
-function salvarNota(e) {
+async function confirmarNota(e) {
   e.preventDefault();
-  const form = document.getElementById("form-confirmacao");
-  const dados = {
-    id: Date.now().toString(),
-    numero: form["conf-numero"].value.trim(),
-    emissor: form["conf-emissor"].value.trim(),
-    vencimento: form["conf-vencimento"].value.trim(),
-    valor: parseFloat(form["conf-valor"].value.replace(",", ".")) || 0,
-    tipo: form["conf-tipo"].value,
-    salvoEm: new Date().toLocaleDateString("pt-BR"),
+  const nota = {
+    numero:       v("cf-numero"),
+    dataEmissao:  v("cf-emissao"),
+    emissor:      v("cf-emissor"),
+    cnpjEmitente: v("cf-cnpj"),
+    valor:        parseFloat(v("cf-valor")) || 0,
+    vencimento:   v("cf-venc"),
+    tipo:         v("cf-tipo"),
+    fluxo:        v("cf-fluxo"),
+    categoria:    v("cf-categoria"),
+    observacoes:  v("cf-obs"),
+    status:       "pendente",
+    criadoEm:     new Date().toISOString(),
   };
-
-  // Salva nota
-  const notas = carregarNotas();
-  notas.unshift(dados);
-  salvarNotas(notas);
-
-  // Cria lançamento de SAÍDA automático no fluxo de caixa
-  if (dados.valor > 0) {
-    const lancamentos = carregarLancamentos();
-    lancamentos.unshift({
-      id: "nota-" + dados.id,
-      tipo: "saida",
-      descricao: `Nota ${dados.numero || "s/n"} — ${dados.emissor || "Emissor desconhecido"}`,
-      valor: dados.valor,
-      data: dados.vencimento || dados.salvoEm,
-      origem: "nota",
-    });
-    salvarLancamentos(lancamentos);
-  }
-
-  Estado.imagemCapturada = null;
-  Estado.dadosExtracao = {};
-  irPara("notas");
+  try {
+    await salvarNota(nota, App.clienteId);
+    await salvarLancamento({
+      descricao: `Nota: ${nota.emissor || nota.numero || "s/n"}`,
+      valor:     nota.valor,
+      tipo:      nota.fluxo,
+      categoria: nota.categoria,
+      data:      new Date().toISOString().split("T")[0],
+    }, App.clienteId);
+    enviarWhatsAppNota(nota, App.cliente?.razaoSocial || App.email, App.cliente?.cnpj, App.email);
+    await carregarDados();
+    toast("✔ Nota salva e enviada para análise!");
+    irPara("dashboard");
+  } catch (err) { toast("Erro ao salvar nota."); console.error(err); }
 }
 
-// ── Lista de notas ────────────────────────────────────────────────────────────
-function renderizarListaNotas() {
-  const lista = document.getElementById("lista-notas");
-  const notas = carregarNotas();
-
-  if (!notas.length) {
-    lista.innerHTML = '<p class="vazio">Nenhuma nota salva ainda.</p>';
-    return;
-  }
-
-  lista.innerHTML = notas
-    .map(
-      (n) => `
-    <div class="card-nota" data-id="${n.id}">
-      <div class="nota-header">
-        <span class="nota-emissor">${n.emissor || "Emissor desconhecido"}</span>
-        <span class="badge-tipo ${n.tipo === "Serviço" ? "servico" : "material"}">${n.tipo || "—"}</span>
-      </div>
-      <div class="nota-linha">
-        <span class="nota-label">Nº</span>
-        <span class="nota-valor-txt">${n.numero || "—"}</span>
-      </div>
-      <div class="nota-linha">
-        <span class="nota-label">Venc.</span>
-        <span class="nota-valor-txt">${n.vencimento || "—"}</span>
-      </div>
-      <div class="nota-linha">
-        <span class="nota-label">Valor</span>
-        <span class="nota-valor-txt valor-destaque">${n.valor ? n.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}</span>
-      </div>
-      <div class="nota-acoes">
-        <button class="btn-secundario" onclick="editarNota('${n.id}')">Editar</button>
-        <button class="btn-perigo" onclick="excluirNota('${n.id}')">Excluir</button>
-      </div>
-    </div>`
-    )
-    .join("");
+// ── Fluxo de Caixa ────────────────────────────────────────────────────────────
+function filtrarFluxo(periodo, btn) {
+  App.periodoFluxo = periodo;
+  document.querySelectorAll("#tela-fluxo .filtro-btn").forEach(b => b.classList.remove("ativo"));
+  if (btn) btn.classList.add("ativo");
+  const custom = document.getElementById("filtro-custom");
+  custom.style.display = periodo === "custom" ? "grid" : "none";
+  if (periodo !== "custom") renderFluxo();
 }
 
-function excluirNota(id) {
-  if (!confirm("Excluir esta nota?")) return;
-  const notas = carregarNotas().filter((n) => n.id !== id);
-  salvarNotas(notas);
-  // Remove lançamento vinculado
-  const lancs = carregarLancamentos().filter((l) => l.id !== "nota-" + id);
-  salvarLancamentos(lancs);
-  renderizarListaNotas();
+function abrirFiltroCustom(btn) {
+  filtrarFluxo("custom", btn);
 }
 
-function editarNota(id) {
-  const nota = carregarNotas().find((n) => n.id === id);
-  if (!nota) return;
-  Estado.dadosExtracao = nota;
-  Estado.dadosExtracao._editandoId = id;
-  irPara("confirmacao");
-  preencherFormularioConfirmacao(nota);
+function aplicarCustom() {
+  const de  = document.getElementById("fc-de").value;
+  const ate = document.getElementById("fc-ate").value;
+  if (de && ate) renderFluxo();
 }
 
-function salvarNotaEditada(e) {
-  e.preventDefault();
-  const id = Estado.dadosExtracao._editandoId;
-  if (!id) { salvarNota(e); return; }
-
-  const form = document.getElementById("form-confirmacao");
-  const notas = carregarNotas().map((n) => {
-    if (n.id !== id) return n;
-    return {
-      ...n,
-      numero: form["conf-numero"].value.trim(),
-      emissor: form["conf-emissor"].value.trim(),
-      vencimento: form["conf-vencimento"].value.trim(),
-      valor: parseFloat(form["conf-valor"].value.replace(",", ".")) || 0,
-      tipo: form["conf-tipo"].value,
-    };
-  });
-  salvarNotas(notas);
-
-  // Atualiza lançamento vinculado se houver
-  const nota = notas.find((n) => n.id === id);
-  if (nota && nota.valor > 0) {
-    const lancs = carregarLancamentos().map((l) => {
-      if (l.id !== "nota-" + id) return l;
-      return {
-        ...l,
-        descricao: `Nota ${nota.numero || "s/n"} — ${nota.emissor || "Emissor desconhecido"}`,
-        valor: nota.valor,
-        data: nota.vencimento || nota.salvoEm,
-      };
-    });
-    salvarLancamentos(lancs);
-  }
-
-  Estado.dadosExtracao = {};
-  irPara("notas");
-}
-
-// ── Fluxo de caixa ────────────────────────────────────────────────────────────
-function renderizarFluxo() {
-  const lancamentos = carregarLancamentos();
-
-  const totalEntradas = lancamentos
-    .filter((l) => l.tipo === "entrada")
-    .reduce((s, l) => s + l.valor, 0);
-  const totalSaidas = lancamentos
-    .filter((l) => l.tipo === "saida")
-    .reduce((s, l) => s + l.valor, 0);
-  const saldo = totalEntradas - totalSaidas;
-
-  const fmt = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-  document.getElementById("saldo-atual").textContent = fmt(saldo);
-  document.getElementById("saldo-atual").className =
-    "saldo-valor " + (saldo >= 0 ? "positivo" : "negativo");
-  document.getElementById("total-entradas").textContent = fmt(totalEntradas);
-  document.getElementById("total-saidas").textContent = fmt(totalSaidas);
-
-  renderizarGrafico(lancamentos);
-  renderizarListaLancamentos(lancamentos);
-}
-
-function renderizarGrafico(lancamentos) {
-  const canvas = document.getElementById("grafico-fluxo");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const W = canvas.width;
-  const H = canvas.height;
-
-  // Agrupa por mês (últimos 6 meses)
-  const meses = [];
-  const hoje = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-    meses.push({
-      label: d.toLocaleDateString("pt-BR", { month: "short" }),
-      entrada: 0,
-      saida: 0,
-    });
-  }
-
-  lancamentos.forEach((l) => {
-    const partes = (l.data || "").split("/");
-    if (partes.length < 3) return;
-    const dataLanc = new Date(+partes[2], +partes[1] - 1, +partes[0]);
-    const diff = (hoje.getFullYear() - dataLanc.getFullYear()) * 12 +
-      (hoje.getMonth() - dataLanc.getMonth());
-    if (diff >= 0 && diff < 6) {
-      const idx = 5 - diff;
-      if (l.tipo === "entrada") meses[idx].entrada += l.valor;
-      else meses[idx].saida += l.valor;
+function lancsNoPeriodo() {
+  const agora = new Date();
+  return App.lancamentos.filter(l => {
+    const d = new Date(l.data ? l.data + "T12:00:00" : l.criadoEm || 0);
+    if (App.periodoFluxo === "hoje")   return mesmoDia(d, agora);
+    if (App.periodoFluxo === "semana") return d >= diaMenos(agora, 7);
+    if (App.periodoFluxo === "mes")    return d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear();
+    if (App.periodoFluxo === "ano")    return d.getFullYear() === agora.getFullYear();
+    if (App.periodoFluxo === "custom") {
+      const de  = new Date(document.getElementById("fc-de").value + "T00:00:00");
+      const ate = new Date(document.getElementById("fc-ate").value + "T23:59:59");
+      return d >= de && d <= ate;
     }
+    return true;
   });
-
-  const maxVal = Math.max(...meses.map((m) => Math.max(m.entrada, m.saida)), 1);
-  const padL = 10, padR = 10, padT = 10, padB = 28;
-  const areaW = W - padL - padR;
-  const areaH = H - padT - padB;
-  const colunaW = areaW / meses.length;
-
-  ctx.clearRect(0, 0, W, H);
-
-  meses.forEach((mes, i) => {
-    const x = padL + i * colunaW;
-    const barW = colunaW * 0.32;
-
-    // Barra entrada (verde)
-    const hE = (mes.entrada / maxVal) * areaH;
-    ctx.fillStyle = "#2F6B3E";
-    ctx.fillRect(x + colunaW * 0.1, padT + areaH - hE, barW, hE);
-
-    // Barra saída (vermelho)
-    const hS = (mes.saida / maxVal) * areaH;
-    ctx.fillStyle = "#A8472E";
-    ctx.fillRect(x + colunaW * 0.1 + barW + 2, padT + areaH - hS, barW, hS);
-
-    // Label mês
-    ctx.fillStyle = "#5B6B5E";
-    ctx.font = "10px 'IBM Plex Sans', sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(mes.label, x + colunaW / 2, H - 8);
-  });
-
-  // Legenda
-  ctx.fillStyle = "#2F6B3E"; ctx.fillRect(padL, 2, 10, 8);
-  ctx.fillStyle = "#5B6B5E"; ctx.font = "9px sans-serif"; ctx.textAlign = "left";
-  ctx.fillText("Entradas", padL + 13, 10);
-  ctx.fillStyle = "#A8472E"; ctx.fillRect(padL + 70, 2, 10, 8);
-  ctx.fillText("Saídas", padL + 83, 10);
 }
 
-function renderizarListaLancamentos(lancamentos) {
-  const lista = document.getElementById("lista-lancamentos");
-  if (!lista) return;
+function renderFluxo() {
+  const lancs = lancsNoPeriodo();
+  const ent   = somarPor(lancs, "entrada");
+  const sai   = somarPor(lancs, "saida");
+  const saldo = ent - sai;
 
-  if (!lancamentos.length) {
-    lista.innerHTML = '<p class="vazio">Nenhum lançamento ainda.</p>';
-    return;
-  }
+  el("fluxo-saldo").textContent = fmt(saldo);
+  el("fluxo-saldo").style.color = saldo >= 0 ? "#6EE7A0" : "#FCA5A5";
+  el("fluxo-ent").textContent   = fmt(ent);
+  el("fluxo-sai").textContent   = fmt(sai);
 
-  lista.innerHTML = lancamentos
-    .slice(0, 30)
-    .map(
-      (l) => `
-    <div class="item-lancamento ${l.tipo}">
+  const cont = el("fluxo-lista");
+  if (!lancs.length) { cont.innerHTML = '<p class="vazio">Nenhum lançamento no período.</p>'; return; }
+  cont.innerHTML = lancs.map(l => `
+    <div class="lanc-item">
+      <div class="lanc-icone ${l.tipo}">${l.tipo === "entrada" ? "🟢" : "🔴"}</div>
       <div class="lanc-info">
-        <span class="lanc-descricao">${l.descricao}</span>
-        <span class="lanc-data">${l.data || "—"}</span>
+        <div class="lanc-desc">${esc(l.descricao || "—")}</div>
+        <div class="lanc-cat">${esc(l.categoria || "—")} · ${fmtDataStr(l.data || l.criadoEm)}</div>
       </div>
-      <span class="lanc-valor ${l.tipo}">${l.tipo === "entrada" ? "+" : "-"}${l.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-      ${l.origem !== "nota" ? `<button class="btn-mini-perigo" onclick="excluirLancamento('${l.id}')">✕</button>` : ""}
-    </div>`
-    )
-    .join("");
+      <div class="lanc-val ${l.tipo}">${fmt(l.valor)}</div>
+      <button class="btn-del-lanc" onclick="excluirLanc('${esc(l.id || "")}')" title="Excluir">🗑</button>
+    </div>`).join("");
 }
 
-function excluirLancamento(id) {
-  if (!confirm("Excluir este lançamento?")) return;
-  salvarLancamentos(carregarLancamentos().filter((l) => l.id !== id));
-  renderizarFluxo();
+async function salvarLancamentoManual(e) {
+  if (e) e.preventDefault();
+  const tipo  = v("lanc-tipo");
+  const valor = parseFloat(v("lanc-valor"));
+  const desc  = v("lanc-desc").trim();
+  const cat   = v("lanc-cat");
+  const data  = v("lanc-data");
+  if (!desc || !valor || valor <= 0 || !data) { toast("Preencha todos os campos."); return; }
+  try {
+    await salvarLancamento({ tipo, valor, descricao: desc, categoria: cat, data }, App.clienteId);
+    await carregarDados();
+    document.getElementById("form-lanc").reset();
+    setVal("lanc-data", new Date().toISOString().split("T")[0]);
+    renderFluxo();
+    toast("✔ Lançamento registrado!");
+  } catch (err) { toast("Erro: " + err.message); }
 }
 
-function adicionarEntrada(e) {
-  e.preventDefault();
-  const form = document.getElementById("form-entrada");
-  const descricao = form["entrada-descricao"].value.trim();
-  const valor = parseFloat(form["entrada-valor"].value.replace(",", "."));
-  const data = form["entrada-data"].value;
-
-  if (!descricao || !valor || valor <= 0) return;
-
-  const [y, m, d] = data.split("-");
-  const dataFmt = `${d}/${m}/${y}`;
-
-  const lancs = carregarLancamentos();
-  lancs.unshift({
-    id: Date.now().toString(),
-    tipo: "entrada",
-    descricao,
-    valor,
-    data: dataFmt,
-    origem: "manual",
-  });
-  salvarLancamentos(lancs);
-  form.reset();
-  form["entrada-data"].value = new Date().toISOString().slice(0, 10);
-  renderizarFluxo();
+async function excluirLanc(id) {
+  if (!id || !confirm("Excluir este lançamento?")) return;
+  try {
+    await excluirLancamento(App.clienteId, id);
+    App.lancamentos = App.lancamentos.filter(l => l.id !== id);
+    renderFluxo();
+    toast("Lançamento excluído.");
+  } catch { toast("Erro ao excluir."); }
 }
 
-// ── WhatsApp ──────────────────────────────────────────────────────────────────
-function abrirWhatsApp() {
-  const numero = CONFIG.ADMIN_WHATSAPP;
-  const msg = encodeURIComponent(CONFIG.ADMIN_WHATSAPP_MENSAGEM);
-  window.open(`https://wa.me/${numero}?text=${msg}`, "_blank");
+// ── Notas ─────────────────────────────────────────────────────────────────────
+function filtrarNotas(filtro, btn) {
+  document.querySelectorAll("#tela-notas .filtro-btn").forEach(b => b.classList.remove("ativo"));
+  if (btn) btn.classList.add("ativo");
+  renderNotas(filtro);
 }
 
-// ── Banner de instalação PWA ──────────────────────────────────────────────────
-let eventoInstalacao = null;
-
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  eventoInstalacao = e;
-  const banner = document.getElementById("banner-instalar-android");
-  if (banner) banner.style.display = "flex";
-});
-
-function instalarApp() {
-  if (!eventoInstalacao) return;
-  eventoInstalacao.prompt();
-  eventoInstalacao.userChoice.then(() => {
-    eventoInstalacao = null;
-    const banner = document.getElementById("banner-instalar-android");
-    if (banner) banner.style.display = "none";
-  });
+function renderNotas(filtro) {
+  const lista = App.notas.filter(n => filtro === "todas" || (n.status || "pendente") === filtro);
+  const cont  = el("notas-lista");
+  if (!lista.length) { cont.innerHTML = '<p class="vazio">Nenhuma nota nesta categoria.</p>'; return; }
+  cont.innerHTML = lista.map(n => `
+    <div class="nota-card">
+      <div class="nota-header">
+        <div style="min-width:0">
+          <div class="nota-emissor">${esc(n.emissor || "Sem emitente")}</div>
+          <div class="nota-num">Nº ${esc(n.numero || "—")}</div>
+        </div>
+        <span class="badge ${badgeTipo(n.tipo)}">${esc(n.tipo || "—")}</span>
+      </div>
+      <div class="nota-linha"><span class="nota-lbl">Valor</span>
+        <span class="nota-val-dinheiro">${fmt(n.valor)}</span></div>
+      <div class="nota-linha"><span class="nota-lbl">Emissão</span>
+        <span>${fmtDataStr(n.dataEmissao)}</span></div>
+      <div class="nota-linha"><span class="nota-lbl">Vencimento</span>
+        <span>${n.vencimento || "—"}</span></div>
+      <div class="nota-linha"><span class="nota-lbl">Categoria</span>
+        <span>${esc(n.categoria || "—")}</span></div>
+      ${n.observacoes ? `<div class="nota-linha"><span class="nota-lbl">Obs</span><span>${esc(n.observacoes)}</span></div>` : ""}
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+        <span class="status-pill ${pillClass(n.status)}">${n.status || "pendente"}</span>
+        ${n.observacaoAdmin ? `<span style="font-size:.72rem;color:var(--muted)">Admin: ${esc(n.observacaoAdmin)}</span>` : ""}
+      </div>
+    </div>`).join("");
 }
 
-function detectarIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone;
-}
+// ── Relatórios ────────────────────────────────────────────────────────────────
+async function exportar(tipo, formato) {
+  const de  = document.getElementById("rel-de")?.value;
+  const ate = document.getElementById("rel-ate")?.value;
+  let dados = tipo === "notas" ? App.notas : App.lancamentos;
 
-// ── Inicialização ─────────────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", () => {
-  // Registra service worker
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch(console.error);
-  }
-
-  // Data padrão do campo de entrada
-  const dataInput = document.getElementById("entrada-data");
-  if (dataInput) dataInput.value = new Date().toISOString().slice(0, 10);
-
-  // Banner iOS
-  if (detectarIOS()) {
-    const banner = document.getElementById("banner-instalar-ios");
-    if (banner) banner.style.display = "flex";
-  }
-
-  // Formulário de confirmação — chama salvarNotaEditada (que internamente chama salvarNota se não for edição)
-  const form = document.getElementById("form-confirmacao");
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      if (Estado.dadosExtracao._editandoId) salvarNotaEditada(e);
-      else salvarNota(e);
+  if (tipo !== "notas" && de && ate) {
+    const dDe  = new Date(de  + "T00:00:00");
+    const dAte = new Date(ate + "T23:59:59");
+    dados = dados.filter(l => {
+      const d = new Date(l.data ? l.data + "T12:00:00" : l.criadoEm || 0);
+      return d >= dDe && d <= dAte;
     });
   }
 
-  // Formulário de entrada manual
-  const formEntrada = document.getElementById("form-entrada");
-  if (formEntrada) formEntrada.addEventListener("submit", adicionarEntrada);
+  if (!dados.length) { toast("Sem dados no período selecionado."); return; }
+  try {
+    if (formato === "pdf") gerarPDF(tipo, dados, App.cliente);
+    else                   gerarExcel(tipo, dados, App.cliente);
+    toast("✔ Relatório gerado!");
+  } catch (e) { toast("Erro ao gerar relatório."); console.error(e); }
+}
 
-  // Input de upload de arquivo
-  const inputArquivo = document.getElementById("input-arquivo");
-  if (inputArquivo) {
-    inputArquivo.addEventListener("change", (e) => {
-      const arquivo = e.target.files[0];
-      if (arquivo) processarUpload(arquivo);
-    });
-  }
+// ── Mensagens ─────────────────────────────────────────────────────────────────
+async function renderMensagens() {
+  const cont = el("msgs-lista");
+  if (!App.mensagens.length) { cont.innerHTML = '<p class="vazio">Nenhuma mensagem recebida.</p>'; return; }
+  cont.innerHTML = App.mensagens.map(m => `
+    <div class="msg-item ${m.lida ? "" : "nao-lida"}">
+      <div class="msg-header">
+        <span class="msg-de">${esc(m.de || "Helmigui")}</span>
+        <span class="msg-hora">${fmtDataStr(m.criadoEm)}</span>
+      </div>
+      <div class="msg-corpo">${esc(m.texto || m.corpo || "")}</div>
+    </div>`).join("");
 
-  // Botão de captura manual
-  const btnCapturar = document.getElementById("btn-capturar");
-  if (btnCapturar) btnCapturar.addEventListener("click", capturarFrameManual);
+  setTimeout(async () => {
+    for (const m of App.mensagens.filter(x => !x.lida)) {
+      try { await marcarMensagemLida(App.clienteId, m.id); m.lida = true; } catch {}
+    }
+    document.getElementById("badge-msg").style.display = "none";
+  }, 2000);
+}
 
-  irPara("home");
-});
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmt    = (n) => (n || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const v      = (id) => document.getElementById(id)?.value || "";
+const el     = (id) => document.getElementById(id);
+const esc    = (s)  => String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const setVal = (id, val) => { const e = document.getElementById(id); if (e) e.value = val ?? ""; };
+const somarPor = (arr, tipo, campo = "valor") =>
+  arr.filter(i => tipo == null || i.tipo === tipo).reduce((s, i) => s + (i[campo] || 0), 0);
+const mesmoDia = (a, b) => a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
+const diaMenos = (d, n) => { const t = new Date(d); t.setDate(t.getDate() - n); return t; };
+
+function fmtDataStr(s) {
+  if (!s) return "—";
+  try { const d = new Date(s); return isNaN(d) ? String(s) : d.toLocaleDateString("pt-BR"); }
+  catch { return String(s); }
+}
+
+function pillClass(status) {
+  if (status === "aprovada")  return "pill-pago";
+  if (status === "rejeitada") return "pill-venc";
+  return "pill-pend";
+}
+
+function badgeTipo(tipo) {
+  if (tipo === "Serviço")    return "badge-serv";
+  if (tipo === "Produto")    return "badge-prod";
+  if (tipo === "Fornecedor") return "badge-forn";
+  return "badge-desp";
+}
+
+let _toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("vis");
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove("vis"), 2800);
+}
