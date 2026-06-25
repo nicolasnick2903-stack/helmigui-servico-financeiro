@@ -2,680 +2,1261 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#1E4D25" />
-  <meta name="description" content="Helmigui Serviços Financeiros — leitura de notas e fluxo de caixa" />
-
-  <!-- PWA / iOS -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Helmigui" />
-  <link rel="apple-touch-icon" href="identidade-visual/icons/apple-touch-icon.png" />
-  <link rel="manifest" href="manifest.json" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0F5132" />
+  <title>Helmigui Serviços Financeiros | Gestão Financeira Empresarial</title>
+  <meta name="description" content="Especialistas em BPO Financeiro, gestão financeira empresarial, contas a pagar e receber, fluxo de caixa e consultoria financeira." />
+  <meta name="keywords" content="BPO financeiro, gestão financeira, fluxo de caixa, contas a pagar, contas a receber, consultoria financeira empresarial" />
+  <meta property="og:title" content="Helmigui Serviços Financeiros | Gestão Financeira Empresarial" />
+  <meta property="og:description" content="Organizamos seu financeiro, reduzimos custos e entregamos informações estratégicas para sua empresa crescer." />
+  <meta property="og:type" content="website" />
   <link rel="icon" href="identidade-visual/icon-mark.png" />
+  <link rel="apple-touch-icon" href="identidade-visual/icon-mark.png" />
 
-  <!-- Tipografia -->
+  <!-- Fontes -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- ZXing (leitor de código de barras) -->
-  <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
-  <!-- Tesseract.js (OCR) -->
-  <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
-
-  <title>Helmigui Serviços Financeiros</title>
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
   <style>
-    /* ── Tokens de cor da marca ─────────────────────────────────────────── */
+    /* ── Tokens ─────────────────────────────────────────────────────────── */
     :root {
-      --paper: #F1F4EC;
-      --paper-deep: #E5EADC;
-      --ink: #1C2B22;
-      --ink-soft: #5B6B5E;
-      --teal: #1E4D25;
-      --teal-light: #2F6B3E;
-      --gold: #D1A84E;
-      --clay: #A8472E;
-      --line: #C9D1BD;
-      --radius: 12px;
-      --sombra: 0 2px 12px rgba(28,43,34,.10);
+      --verde: #0F5132;
+      --verde-light: #1a7a4a;
+      --verde-dark: #0a3d26;
+      --ouro: #D4AF37;
+      --ouro-light: #e8c94b;
+      --branco: #FFFFFF;
+      --cinza-claro: #F8F9FA;
+      --cinza: #6c757d;
+      --cinza-escuro: #343A40;
+      --sombra: 0 4px 24px rgba(15,81,50,.12);
+      --sombra-ouro: 0 4px 24px rgba(212,175,55,.25);
+      --radius: 16px;
+      --transition: .3s cubic-bezier(.4,0,.2,1);
     }
 
-    /* ── Reset e base ────────────────────────────────────────────────────── */
+    /* ── Reset ───────────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    html { scroll-behavior: smooth; }
     body {
-      font-family: 'IBM Plex Sans', sans-serif;
-      background: var(--paper);
-      color: var(--ink);
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      font-family: 'Inter', sans-serif;
+      color: var(--cinza-escuro);
+      background: var(--branco);
+      overflow-x: hidden;
     }
+    img { max-width: 100%; }
+    a { text-decoration: none; color: inherit; }
 
-    /* ── Container central (layout desktop) ─────────────────────────────── */
-    .container {
-      width: 100%;
-      max-width: 520px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+    /* ── Header ──────────────────────────────────────────────────────────── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 14px 0;
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(15,81,50,.1);
+      transition: box-shadow var(--transition);
     }
+    header.scrolled { box-shadow: 0 2px 20px rgba(15,81,50,.12); }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 24px;
+      display: flex; align-items: center; gap: 32px;
+    }
+    .header-logo { height: 44px; object-fit: contain; }
+    .header-logo-text {
+      font-family: 'Poppins', sans-serif; font-weight: 700;
+      font-size: 1.1rem; color: var(--verde);
+      display: flex; flex-direction: column; line-height: 1.1;
+    }
+    .header-logo-text span { font-size: 0.6rem; font-weight: 500; color: var(--ouro); letter-spacing: .1em; text-transform: uppercase; }
+    nav { display: flex; gap: 8px; margin-left: auto; }
+    nav a {
+      font-family: 'Inter', sans-serif; font-weight: 500;
+      font-size: 0.88rem; color: var(--cinza-escuro);
+      padding: 7px 14px; border-radius: 8px;
+      transition: color var(--transition), background var(--transition);
+    }
+    nav a:hover { color: var(--verde); background: rgba(15,81,50,.06); }
+    .btn-header {
+      font-family: 'Poppins', sans-serif; font-weight: 600;
+      font-size: 0.85rem;
+      background: var(--ouro); color: var(--cinza-escuro);
+      padding: 10px 20px; border-radius: 10px;
+      border: none; cursor: pointer;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      box-shadow: var(--sombra-ouro);
+      white-space: nowrap;
+    }
+    .btn-header:hover { background: var(--ouro-light); transform: translateY(-1px); box-shadow: 0 6px 28px rgba(212,175,55,.35); }
+    .menu-mobile { display: none; background: none; border: none; cursor: pointer; padding: 6px; }
+    .menu-mobile span { display: block; width: 24px; height: 2px; background: var(--cinza-escuro); margin: 5px 0; border-radius: 2px; transition: var(--transition); }
 
-    /* ── Cabeçalho ───────────────────────────────────────────────────────── */
-    .cabecalho {
-      background: var(--teal);
-      padding: 16px 20px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+    /* ── Hero ────────────────────────────────────────────────────────────── */
+    #inicio {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      background: linear-gradient(135deg, var(--verde-dark) 0%, var(--verde) 50%, #1a6b40 100%);
+      position: relative; overflow: hidden;
+      padding-top: 80px;
     }
-    .cabecalho img.logo {
-      height: 40px;
-      object-fit: contain;
+    .hero-bg-grid {
+      position: absolute; inset: 0; opacity: .05;
+      background-image: linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+      background-size: 40px 40px;
     }
-    .cabecalho-titulo {
-      font-family: 'Lora', serif;
-      font-size: 1rem;
-      font-weight: 700;
-      color: #fff;
-    }
-    .btn-admin-link {
-      font-size: 0.72rem;
-      color: var(--gold);
-      text-decoration: none;
-      padding: 4px 8px;
-      border: 1px solid var(--gold);
-      border-radius: 6px;
-    }
-
-    /* ── Telas ───────────────────────────────────────────────────────────── */
-    .tela {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      padding: 20px 16px 32px;
-      gap: 16px;
-    }
-    .tela.ativa { display: flex; }
-
-    /* ── Banner de instalação ────────────────────────────────────────────── */
-    .banner-instalar {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      background: var(--teal-light);
-      color: #fff;
-      padding: 10px 16px;
-      font-size: 0.82rem;
-      border-bottom: 2px solid var(--gold);
-    }
-    .banner-instalar button {
-      margin-left: auto;
-      background: var(--gold);
-      color: var(--ink);
-      border: none;
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.78rem;
-    }
-    .banner-instalar .btn-fechar {
-      background: transparent;
-      color: #fff;
-      font-size: 1.1rem;
-      line-height: 1;
-      padding: 4px 6px;
-      margin-left: 0;
-    }
-
-    /* ── Home — 3 botões principais ──────────────────────────────────────── */
-    .home-boas-vindas {
-      text-align: center;
-      padding: 8px 0 4px;
-    }
-    .home-boas-vindas img {
-      width: min(220px, 80%);
-      object-fit: contain;
-      margin-bottom: 12px;
-    }
-    .home-boas-vindas h1 {
-      font-family: 'Lora', serif;
-      font-size: 1.15rem;
-      color: var(--teal);
-      margin-bottom: 4px;
-    }
-    .home-boas-vindas p {
-      font-size: 0.82rem;
-      color: var(--ink-soft);
-    }
-
-    .grid-botoes {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .btn-home {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: #fff;
-      border: 1.5px solid var(--line);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      cursor: pointer;
-      box-shadow: var(--sombra);
-      text-align: left;
-      transition: border-color .15s, box-shadow .15s;
-    }
-    .btn-home:hover { border-color: var(--teal); box-shadow: 0 4px 16px rgba(30,77,37,.14); }
-    .btn-home-icone {
-      width: 44px; height: 44px;
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem;
-      flex-shrink: 0;
-    }
-    .btn-home-icone.verde { background: #E6F0E8; }
-    .btn-home-icone.ouro  { background: #FAF3E3; }
-    .btn-home-icone.azul  { background: #E3EDF5; }
-    .btn-home-titulo { font-weight: 600; font-size: 0.95rem; color: var(--ink); }
-    .btn-home-desc   { font-size: 0.75rem; color: var(--ink-soft); margin-top: 2px; }
-
-    /* ── Nav inferior ────────────────────────────────────────────────────── */
-    .nav-inferior {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: #fff;
-      border-top: 1px solid var(--line);
-      display: flex;
-      z-index: 10;
-    }
-    .nav-btn {
-      flex: 1;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 8px 4px 10px;
-      font-size: 0.65rem;
-      color: var(--ink-soft);
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      gap: 3px;
-      transition: color .15s;
-    }
-    .nav-btn svg { width: 22px; height: 22px; }
-    .nav-btn.ativo { color: var(--teal); font-weight: 600; }
-    .tela-principal { padding-bottom: 80px !important; }
-
-    /* ── Câmera ──────────────────────────────────────────────────────────── */
-    .camera-wrap {
-      position: relative;
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: #000;
-      aspect-ratio: 4/3;
-      width: 100%;
-    }
-    #video-camera {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .camera-guia {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80%; height: 30%;
-      border: 2.5px solid var(--gold);
-      border-radius: 8px;
-      pointer-events: none;
-    }
-    .camera-guia::before,
-    .camera-guia::after {
-      content: '';
-      position: absolute;
-      width: 16px; height: 16px;
-      border-color: var(--gold);
-      border-style: solid;
-    }
-    .camera-guia::before { top: -3px; left: -3px; border-width: 3px 0 0 3px; }
-    .camera-guia::after  { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; }
-
-    #msg-camera {
-      display: none;
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffc107;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 0.82rem;
-    }
-
-    /* ── Processando ─────────────────────────────────────────────────────── */
-    .processando-wrap {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 20px; min-height: 250px; text-align: center;
-    }
-    .spinner-grande {
-      width: 52px; height: 52px;
-      border: 5px solid var(--paper-deep);
-      border-top-color: var(--teal);
+    .hero-glow {
+      position: absolute; width: 600px; height: 600px;
       border-radius: 50%;
-      animation: spin .8s linear infinite;
+      background: radial-gradient(circle, rgba(212,175,55,.15) 0%, transparent 70%);
+      top: -100px; right: -100px; pointer-events: none;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #status-processando { font-size: 0.9rem; color: var(--ink-soft); }
-    #ocr-progresso { font-size: 0.78rem; color: var(--ink-soft); }
-
-    /* ── Formulários ─────────────────────────────────────────────────────── */
-    .campo { display: flex; flex-direction: column; gap: 5px; }
-    .campo label { font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
-    .campo input,
-    .campo select,
-    .campo textarea {
-      background: #fff;
-      border: 1.5px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 0.92rem;
-      color: var(--ink);
-      font-family: inherit;
-      outline: none;
-      transition: border-color .15s;
+    .hero-inner {
+      max-width: 1200px; margin: 0 auto; padding: 80px 24px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+      position: relative; z-index: 1;
     }
-    .campo input:focus,
-    .campo select:focus { border-color: var(--teal); }
-    .campo input.mono { font-family: 'IBM Plex Mono', monospace; }
-
-    /* ── Botões ──────────────────────────────────────────────────────────── */
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(212,175,55,.15); border: 1px solid rgba(212,175,55,.3);
+      border-radius: 20px; padding: 6px 14px; margin-bottom: 20px;
+      font-size: 0.78rem; font-weight: 600; color: var(--ouro);
+      letter-spacing: .05em; text-transform: uppercase;
+    }
+    .hero-titulo {
+      font-family: 'Poppins', sans-serif; font-weight: 800;
+      font-size: clamp(1.8rem, 3.5vw, 3rem);
+      color: var(--branco); line-height: 1.15; margin-bottom: 20px;
+    }
+    .hero-titulo em { color: var(--ouro); font-style: normal; }
+    .hero-subtitulo {
+      font-size: 1rem; color: rgba(255,255,255,.8);
+      line-height: 1.7; margin-bottom: 36px;
+    }
+    .hero-botoes { display: flex; gap: 14px; flex-wrap: wrap; }
     .btn-primario {
-      background: var(--teal);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: 13px 20px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      transition: background .15s;
+      font-family: 'Poppins', sans-serif; font-weight: 600;
+      font-size: 0.92rem;
+      background: var(--ouro); color: var(--cinza-escuro);
+      padding: 14px 28px; border-radius: 12px; border: none;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      transition: all var(--transition); box-shadow: var(--sombra-ouro);
     }
-    .btn-primario:hover { background: var(--teal-light); }
-    .btn-primario:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primario:hover { background: var(--ouro-light); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(212,175,55,.4); }
+    .btn-outline {
+      font-family: 'Poppins', sans-serif; font-weight: 600;
+      font-size: 0.92rem;
+      background: transparent; color: var(--branco);
+      padding: 14px 28px; border-radius: 12px;
+      border: 2px solid rgba(255,255,255,.4);
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      transition: all var(--transition);
+    }
+    .btn-outline:hover { border-color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); transform: translateY(-2px); }
 
-    .btn-secundario {
-      background: var(--paper-deep);
-      color: var(--ink);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
+    /* Dashboard mockup */
+    .hero-dashboard {
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 20px; padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
     }
-    .btn-perigo {
-      background: rgba(168,71,46,.1);
-      color: var(--clay);
-      border: 1px solid rgba(168,71,46,.25);
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
+    .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .dash-titulo { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--branco); }
+    .dash-badge { font-size: 0.68rem; background: rgba(212,175,55,.2); color: var(--ouro); padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .dash-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .dash-card {
+      background: rgba(255,255,255,.08); border-radius: 12px; padding: 14px;
+      border: 1px solid rgba(255,255,255,.1);
     }
-    .btn-mini-perigo {
-      background: none; border: none;
-      color: var(--clay); cursor: pointer;
-      font-size: 0.8rem; padding: 4px 6px;
+    .dash-card-label { font-size: 0.65rem; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+    .dash-card-valor { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.1rem; }
+    .dash-card-valor.verde { color: #4ade80; }
+    .dash-card-valor.ouro  { color: var(--ouro); }
+    .dash-card-valor.branco { color: var(--branco); }
+    .dash-card-var { font-size: 0.68rem; margin-top: 3px; }
+    .dash-card-var.up { color: #4ade80; }
+    .dash-card-var.down { color: #f87171; }
+    /* Barras do gráfico */
+    .dash-grafico { display: flex; align-items: flex-end; gap: 6px; height: 70px; padding: 0 4px; }
+    .dash-barra {
+      flex: 1; border-radius: 4px 4px 0 0;
+      background: linear-gradient(to top, rgba(212,175,55,.4), rgba(212,175,55,.8));
+      transition: opacity .3s;
     }
-    .btn-ouro {
-      background: var(--gold);
-      color: var(--ink);
-      border: none;
-      border-radius: var(--radius);
-      padding: 13px 20px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-    }
-    .btn-upload {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: var(--paper-deep);
-      border: 1.5px dashed var(--line);
-      border-radius: var(--radius);
-      padding: 14px;
-      cursor: pointer;
-      font-size: 0.88rem;
-      color: var(--ink-soft);
-      font-weight: 500;
-      transition: border-color .15s;
-    }
-    .btn-upload:hover { border-color: var(--teal); }
+    .dash-barra.alt { background: linear-gradient(to top, rgba(74,222,128,.4), rgba(74,222,128,.8)); }
 
-    /* ── Cards de nota ───────────────────────────────────────────────────── */
-    .card-nota {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 14px 16px;
+    /* ── Seções base ─────────────────────────────────────────────────────── */
+    section { padding: 90px 0; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .secao-eyebrow {
+      font-family: 'Poppins', sans-serif; font-weight: 600;
+      font-size: 0.75rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--ouro); margin-bottom: 10px;
+    }
+    .secao-titulo {
+      font-family: 'Poppins', sans-serif; font-weight: 700;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      color: var(--cinza-escuro); margin-bottom: 16px; line-height: 1.2;
+    }
+    .secao-titulo em { color: var(--verde); font-style: normal; }
+    .secao-subtitulo { font-size: 1rem; color: var(--cinza); line-height: 1.7; max-width: 600px; }
+    .text-center { text-align: center; }
+    .text-center .secao-subtitulo { margin: 0 auto; }
+
+    /* ── Serviços ────────────────────────────────────────────────────────── */
+    #servicos { background: var(--cinza-claro); }
+    .servicos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px; margin-top: 48px;
+    }
+    .card-servico {
+      background: var(--branco);
+      border-radius: var(--radius); padding: 32px;
       box-shadow: var(--sombra);
+      border: 1px solid transparent;
+      transition: all var(--transition);
+      position: relative; overflow: hidden;
     }
-    .nota-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px;
+    .card-servico::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--verde), var(--ouro));
+      opacity: 0; transition: opacity var(--transition);
     }
-    .nota-emissor { font-weight: 700; font-size: 0.9rem; flex: 1; margin-right: 8px; }
-    .badge-tipo {
-      font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
-      border-radius: 20px; text-transform: uppercase; letter-spacing: .05em;
+    .card-servico:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(15,81,50,.15); border-color: rgba(15,81,50,.1); }
+    .card-servico:hover::before { opacity: 1; }
+    .card-servico-icone {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(15,81,50,.1), rgba(212,175,55,.1));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 18px;
+      transition: transform var(--transition);
     }
-    .badge-tipo.servico { background: #E6F0E8; color: var(--teal); }
-    .badge-tipo.material { background: #FAF3E3; color: #8A6200; }
-    .nota-linha {
-      display: flex; gap: 8px;
-      font-size: 0.8rem; margin-bottom: 4px;
+    .card-servico:hover .card-servico-icone { transform: scale(1.1); }
+    .card-servico h3 {
+      font-family: 'Poppins', sans-serif; font-weight: 700;
+      font-size: 1rem; color: var(--cinza-escuro); margin-bottom: 10px;
     }
-    .nota-label { color: var(--ink-soft); min-width: 44px; }
-    .nota-valor-txt { color: var(--ink); }
-    .valor-destaque { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--clay); }
-    .nota-acoes { display: flex; gap: 8px; margin-top: 12px; }
+    .card-servico p { font-size: 0.88rem; color: var(--cinza); line-height: 1.6; }
+    .card-servico-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 16px; font-size: 0.82rem; font-weight: 600;
+      color: var(--verde); opacity: 0;
+      transition: opacity var(--transition), gap var(--transition);
+    }
+    .card-servico:hover .card-servico-link { opacity: 1; gap: 10px; }
 
-    /* ── Fluxo de caixa ──────────────────────────────────────────────────── */
-    .card-saldo {
-      background: var(--teal);
-      border-radius: var(--radius);
-      padding: 20px;
-      color: #fff;
+    /* ── Diferenciais ────────────────────────────────────────────────────── */
+    .diferenciais-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px; margin-top: 48px;
+    }
+    .card-diferencial {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: var(--branco); border-radius: var(--radius);
+      padding: 24px; box-shadow: var(--sombra);
+      transition: transform var(--transition);
+    }
+    .card-diferencial:hover { transform: translateY(-3px); }
+    .diferencial-check {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--verde), var(--verde-light));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--branco); font-size: 1rem; font-weight: 700;
+    }
+    .card-diferencial h4 {
+      font-family: 'Poppins', sans-serif; font-weight: 700;
+      font-size: 0.95rem; color: var(--cinza-escuro); margin-bottom: 4px;
+    }
+    .card-diferencial p { font-size: 0.82rem; color: var(--cinza); line-height: 1.5; }
+
+    /* ── Números ─────────────────────────────────────────────────────────── */
+    #numeros {
+      background: linear-gradient(135deg, var(--verde-dark), var(--verde));
+      position: relative; overflow: hidden;
+    }
+    #numeros::before {
+      content: '';
+      position: absolute; inset: 0; opacity: .04;
+      background-image: radial-gradient(circle, var(--branco) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+    .numeros-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 32px; position: relative; z-index: 1;
+    }
+    .numero-item { text-align: center; }
+    .numero-valor {
+      font-family: 'Poppins', sans-serif; font-weight: 800;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--ouro); display: block; margin-bottom: 8px;
+    }
+    .numero-label {
+      font-size: 0.85rem; color: rgba(255,255,255,.75); font-weight: 500;
+    }
+
+    /* ── Como Funciona ───────────────────────────────────────────────────── */
+    #como-funciona { background: var(--cinza-claro); }
+    .timeline {
+      display: flex; flex-direction: column; gap: 0;
+      max-width: 700px; margin: 48px auto 0; position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute; left: 27px; top: 28px; bottom: 28px;
+      width: 2px; background: linear-gradient(to bottom, var(--verde), var(--ouro));
+    }
+    .timeline-item {
+      display: flex; gap: 24px; padding-bottom: 36px;
+      opacity: 0; transform: translateX(-30px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .timeline-item.visivel { opacity: 1; transform: translateX(0); }
+    .timeline-num {
+      width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+      background: var(--branco);
+      border: 3px solid var(--verde);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.1rem;
+      color: var(--verde); box-shadow: var(--sombra); position: relative; z-index: 1;
+    }
+    .timeline-conteudo {
+      background: var(--branco); border-radius: var(--radius);
+      padding: 20px 24px; box-shadow: var(--sombra);
+      flex: 1; border-left: 3px solid var(--ouro);
+    }
+    .timeline-conteudo h4 {
+      font-family: 'Poppins', sans-serif; font-weight: 700;
+      font-size: 0.95rem; color: var(--cinza-escuro); margin-bottom: 6px;
+    }
+    .timeline-conteudo p { font-size: 0.85rem; color: var(--cinza); line-height: 1.5; }
+
+    /* ── Sobre ───────────────────────────────────────────────────────────── */
+    .sobre-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 64px; align-items: center;
+    }
+    .sobre-img-wrap {
+      border-radius: 20px; overflow: hidden;
+      position: relative; aspect-ratio: 4/3;
+      background: linear-gradient(135deg, var(--verde-dark), var(--verde));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 20px 60px rgba(15,81,50,.25);
+    }
+    .sobre-img-wrap svg { width: 60%; opacity: .5; }
+    .sobre-badge {
+      position: absolute; bottom: 20px; left: 20px;
+      background: var(--ouro); color: var(--cinza-escuro);
+      padding: 10px 18px; border-radius: 12px;
+      font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.82rem;
+    }
+    .sobre-texto p { font-size: 0.95rem; color: var(--cinza); line-height: 1.8; margin-bottom: 20px; }
+    .sobre-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+    .sobre-stat {
+      background: var(--cinza-claro); border-radius: 12px; padding: 16px;
+      border-left: 3px solid var(--ouro);
+    }
+    .sobre-stat-num {
+      font-family: 'Poppins', sans-serif; font-weight: 800;
+      font-size: 1.4rem; color: var(--verde);
+    }
+    .sobre-stat-txt { font-size: 0.78rem; color: var(--cinza); margin-top: 2px; }
+
+    /* ── Depoimentos ─────────────────────────────────────────────────────── */
+    #depoimentos { background: var(--cinza-claro); }
+    .slider-wrap { position: relative; overflow: hidden; margin-top: 48px; }
+    .slider-track {
+      display: flex; gap: 24px;
+      transition: transform .5s cubic-bezier(.4,0,.2,1);
+    }
+    .card-depoimento {
+      flex: 0 0 calc(33.33% - 16px);
+      background: var(--branco); border-radius: var(--radius);
+      padding: 28px; box-shadow: var(--sombra);
+      border-top: 3px solid var(--ouro);
+    }
+    .depo-estrelas { color: var(--ouro); font-size: 0.9rem; margin-bottom: 14px; letter-spacing: 2px; }
+    .depo-texto { font-size: 0.9rem; color: var(--cinza); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+    .depo-autor { display: flex; align-items: center; gap: 12px; }
+    .depo-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--verde), var(--ouro));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Poppins', sans-serif; font-weight: 700; color: var(--branco); font-size: 1rem;
+    }
+    .depo-nome { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.88rem; color: var(--cinza-escuro); }
+    .depo-cargo { font-size: 0.75rem; color: var(--cinza); }
+    .slider-dots { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
+    .slider-dot {
+      width: 8px; height: 8px; border-radius: 4px;
+      background: var(--cinza); opacity: .3;
+      border: none; cursor: pointer; transition: all .3s; padding: 0;
+    }
+    .slider-dot.ativo { opacity: 1; background: var(--ouro); width: 24px; }
+
+    /* ── Benefícios ──────────────────────────────────────────────────────── */
+    .beneficios-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 64px; align-items: center;
+    }
+    .beneficios-img {
+      border-radius: 20px; overflow: hidden;
+      background: linear-gradient(135deg, #0a3d26, var(--verde));
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(15,81,50,.2);
+    }
+    /* Mini dashboard nos benefícios */
+    .mini-dash { display: flex; flex-direction: column; gap: 12px; }
+    .mini-dash-row { display: flex; align-items: center; gap: 12px; }
+    .mini-dash-bar-wrap { flex: 1; height: 8px; background: rgba(255,255,255,.15); border-radius: 4px; }
+    .mini-dash-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--ouro), var(--ouro-light)); }
+    .mini-dash-label { font-size: 0.75rem; color: rgba(255,255,255,.7); min-width: 80px; }
+    .mini-dash-val { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.75rem; color: var(--ouro); min-width: 36px; text-align: right; }
+    .beneficios-lista { display: flex; flex-direction: column; gap: 16px; }
+    .beneficio-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px; background: var(--cinza-claro);
+      border-radius: 12px; transition: all var(--transition);
+    }
+    .beneficio-item:hover { background: rgba(15,81,50,.06); transform: translateX(4px); }
+    .beneficio-check {
+      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+      background: var(--verde); color: var(--branco);
+      display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+    }
+    .beneficio-item h4 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; }
+    .beneficio-item p { font-size: 0.8rem; color: var(--cinza); }
+
+    /* ── CTA ─────────────────────────────────────────────────────────────── */
+    #cta {
+      background: linear-gradient(135deg, var(--ouro-light), var(--ouro), #b8962e);
       text-align: center;
     }
-    .saldo-label { font-size: 0.75rem; opacity: .8; text-transform: uppercase; letter-spacing: .08em; }
-    .saldo-valor { font-family: 'IBM Plex Mono', monospace; font-size: 1.8rem; font-weight: 700; margin: 6px 0; }
-    .saldo-valor.positivo { color: #9EE8A8; }
-    .saldo-valor.negativo { color: #F4A99B; }
-    .saldo-linha {
-      display: flex; justify-content: space-around; margin-top: 10px;
-      font-size: 0.78rem;
+    .cta-titulo {
+      font-family: 'Poppins', sans-serif; font-weight: 800;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      color: var(--cinza-escuro); margin-bottom: 16px;
     }
-    .saldo-linha span { opacity: .85; }
-    .saldo-linha strong { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.92rem; }
+    .cta-sub { font-size: 1rem; color: rgba(52,58,64,.75); margin-bottom: 36px; }
+    .cta-botoes { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .btn-verde {
+      font-family: 'Poppins', sans-serif; font-weight: 600;
+      font-size: 0.95rem;
+      background: var(--verde); color: var(--branco);
+      padding: 15px 32px; border-radius: 12px; border: none;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      transition: all var(--transition);
+      box-shadow: 0 4px 20px rgba(15,81,50,.3);
+    }
+    .btn-verde:hover { background: var(--verde-light); transform: translateY(-2px); }
+    .btn-wpp {
+      font-family: 'Poppins', sans-serif; font-weight: 600;
+      font-size: 0.95rem;
+      background: #25D366; color: var(--branco);
+      padding: 15px 32px; border-radius: 12px; border: none;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      transition: all var(--transition);
+    }
+    .btn-wpp:hover { background: #20ba5a; transform: translateY(-2px); }
 
-    #grafico-fluxo {
-      width: 100%; height: 140px;
-      border-radius: var(--radius);
-      background: #fff;
-      border: 1px solid var(--line);
+    /* ── Contato ─────────────────────────────────────────────────────────── */
+    #contato { background: var(--cinza-claro); }
+    .contato-inner { display: grid; grid-template-columns: 1fr 1.4fr; gap: 64px; align-items: start; margin-top: 48px; }
+    .contato-info h3 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 20px; color: var(--cinza-escuro); }
+    .contato-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+    .contato-icone {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(15,81,50,.1);
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    }
+    .contato-item h4 { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.85rem; color: var(--cinza-escuro); margin-bottom: 2px; }
+    .contato-item p { font-size: 0.8rem; color: var(--cinza); }
+    .form-contato { background: var(--branco); border-radius: var(--radius); padding: 32px; box-shadow: var(--sombra); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-campo { display: flex; flex-direction: column; gap: 6px; }
+    .form-campo.full { grid-column: 1 / -1; }
+    .form-campo label { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.78rem; color: var(--cinza-escuro); }
+    .form-campo input,
+    .form-campo textarea,
+    .form-campo select {
+      border: 1.5px solid #e0e0e0; border-radius: 10px;
+      padding: 12px 14px; font-size: 0.9rem; font-family: 'Inter', sans-serif;
+      color: var(--cinza-escuro); outline: none; background: var(--branco);
+      transition: border-color var(--transition);
+    }
+    .form-campo input:focus,
+    .form-campo textarea:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(15,81,50,.08); }
+    .form-campo textarea { resize: vertical; min-height: 110px; }
+    .btn-form {
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.95rem;
+      background: var(--verde); color: var(--branco);
+      padding: 14px 28px; border-radius: 12px; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: all var(--transition); box-shadow: var(--sombra);
+      margin-top: 8px;
+    }
+    .btn-form:hover { background: var(--verde-light); transform: translateY(-1px); }
+    #msg-form { font-size: 0.85rem; margin-top: 10px; display: none; }
+    #msg-form.ok { color: #0F5132; }
+    #msg-form.erro { color: var(--cinza-escuro); }
+
+    /* ── Rodapé ──────────────────────────────────────────────────────────── */
+    footer {
+      background: var(--cinza-escuro);
+      color: rgba(255,255,255,.75);
+      padding: 60px 0 24px;
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px; margin-bottom: 40px;
+    }
+    .footer-logo { height: 48px; object-fit: contain; margin-bottom: 14px; filter: brightness(0) invert(1); opacity: .8; }
+    .footer-desc { font-size: 0.82rem; line-height: 1.7; margin-bottom: 20px; }
+    .footer-social { display: flex; gap: 10px; }
+    .footer-social a {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(255,255,255,.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; transition: background var(--transition);
+    }
+    .footer-social a:hover { background: var(--ouro); color: var(--cinza-escuro); }
+    .footer-col h4 {
+      font-family: 'Poppins', sans-serif; font-weight: 700;
+      font-size: 0.85rem; color: var(--branco); margin-bottom: 16px;
+      padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .footer-col ul li a {
+      font-size: 0.82rem; color: rgba(255,255,255,.65);
+      transition: color var(--transition);
+    }
+    .footer-col ul li a:hover { color: var(--ouro); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.1);
+      padding-top: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+    }
+    .footer-bottom p { font-size: 0.78rem; }
+    .footer-bottom a { color: var(--ouro); }
+
+    /* ── WhatsApp flutuante ──────────────────────────────────────────────── */
+    .wpp-float {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: #25D366;
+      box-shadow: 0 4px 20px rgba(37,211,102,.45);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.6rem;
+      animation: pulso 2.5s infinite;
+      transition: transform .2s;
+    }
+    .wpp-float:hover { transform: scale(1.1); animation: none; }
+    @keyframes pulso {
+      0%,100% { box-shadow: 0 4px 20px rgba(37,211,102,.45); }
+      50% { box-shadow: 0 4px 32px rgba(37,211,102,.7), 0 0 0 8px rgba(37,211,102,.12); }
     }
 
-    .secao-titulo {
-      font-size: 0.78rem; font-weight: 700;
-      color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em;
+    /* ── Scroll reveal ───────────────────────────────────────────────────── */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .65s ease, transform .65s ease; }
+    .reveal.visivel { opacity: 1; transform: translateY(0); }
+
+    /* ── Mobile menu ─────────────────────────────────────────────────────── */
+    .nav-mobile {
+      display: none;
+      flex-direction: column;
+      background: var(--branco);
+      border-top: 1px solid rgba(15,81,50,.1);
+      padding: 12px 24px 16px;
+      gap: 4px;
     }
-
-    .item-lancamento {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      font-size: 0.82rem;
+    .nav-mobile.aberto { display: flex; }
+    .nav-mobile a {
+      padding: 10px 12px; border-radius: 8px;
+      font-weight: 500; font-size: 0.92rem;
+      transition: background var(--transition);
     }
-    .lanc-info { flex: 1; }
-    .lanc-descricao { font-weight: 500; display: block; }
-    .lanc-data { color: var(--ink-soft); font-size: 0.72rem; }
-    .lanc-valor { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.88rem; white-space: nowrap; }
-    .lanc-valor.entrada { color: var(--teal-light); }
-    .lanc-valor.saida   { color: var(--clay); }
+    .nav-mobile a:hover { background: var(--cinza-claro); }
 
-    .card-form {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 16px;
-      display: flex; flex-direction: column; gap: 12px;
+    /* ── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      nav { display: none; }
+      .btn-header { display: none; }
+      .menu-mobile { display: flex; flex-direction: column; margin-left: auto; }
+      .hero-inner { grid-template-columns: 1fr; text-align: center; }
+      .hero-botoes { justify-content: center; }
+      .hero-dashboard { display: none; }
+      .sobre-inner,
+      .beneficios-inner,
+      .contato-inner { grid-template-columns: 1fr; }
+      .numeros-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .card-depoimento { flex: 0 0 calc(80% - 12px); }
     }
-    .card-form h3 { font-size: 0.88rem; font-weight: 700; color: var(--ink-soft); }
-
-    /* ── Util ────────────────────────────────────────────────────────────── */
-    .vazio { text-align: center; color: var(--ink-soft); font-size: 0.85rem; padding: 24px 0; }
-    .secao-gap { display: flex; flex-direction: column; gap: 8px; }
-
-    /* ── Responsivo desktop ──────────────────────────────────────────────── */
-    @media (min-width: 900px) {
-      body { background: var(--paper-deep); }
-      .container {
-        max-width: 480px;
-        margin: 20px auto;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 8px 40px rgba(28,43,34,.15);
-        background: var(--paper);
-      }
-      .nav-inferior { position: static; border-top: 1px solid var(--line); border-radius: 0 0 20px 20px; }
+    @media (max-width: 600px) {
+      section { padding: 60px 0; }
+      .numeros-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .card-depoimento { flex: 0 0 90%; }
+      .cta-botoes { flex-direction: column; align-items: center; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── Banner Android ──────────────────────────────────────────────────────── -->
-<div id="banner-instalar-android" class="banner-instalar">
-  <span>📲 Instale o app na sua tela inicial</span>
-  <button onclick="instalarApp()">Instalar</button>
-  <button class="btn-fechar" onclick="this.parentElement.style.display='none'">✕</button>
-</div>
-
-<!-- ── Banner iOS ─────────────────────────────────────────────────────────── -->
-<div id="banner-instalar-ios" class="banner-instalar">
-  <span>📲 Toque em <strong>Compartilhar</strong> e depois em <strong>"Adicionar à Tela de Início"</strong></span>
-  <button class="btn-fechar" onclick="this.parentElement.style.display='none'">✕</button>
-</div>
-
-<!-- ── App container ──────────────────────────────────────────────────────── -->
-<div class="container">
-
-  <!-- Cabeçalho -->
-  <header class="cabecalho">
-    <img src="identidade-visual/logo-oficial.png" alt="Helmigui" class="logo" onerror="this.replaceWith(document.createTextNode('Helmigui'))" />
-    <a href="admin.html" class="btn-admin-link">Admin</a>
-  </header>
-
-  <!-- ── TELA HOME ─────────────────────────────────────────────────────── -->
-  <section id="tela-home" class="tela tela-principal">
-    <div class="home-boas-vindas">
-      <img src="identidade-visual/logo-oficial.png" alt="Helmigui Serviços Financeiros" onerror="this.style.display='none'" />
-      <h1>Olá, bem-vindo!</h1>
-      <p>O que você precisa hoje?</p>
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header id="header">
+  <div class="header-inner">
+    <img src="identidade-visual/logo-oficial.png" alt="Helmigui" class="header-logo"
+         onerror="this.style.display='none';document.getElementById('logo-txt').style.display='flex'" />
+    <div id="logo-txt" class="header-logo-text" style="display:none">
+      HELMIGUI<span>Serviços Financeiros</span>
     </div>
 
-    <div class="grid-botoes">
-      <button class="btn-home" onclick="abrirCamera()">
-        <div class="btn-home-icone verde">📷</div>
-        <div>
-          <div class="btn-home-titulo">Escanear Nota</div>
-          <div class="btn-home-desc">Aponte para boleto ou nota fiscal</div>
-        </div>
-      </button>
+    <nav id="nav-desktop">
+      <a href="#inicio">Início</a>
+      <a href="#servicos">Serviços</a>
+      <a href="#diferenciais">Benefícios</a>
+      <a href="#sobre">Sobre Nós</a>
+      <a href="#depoimentos">Depoimentos</a>
+      <a href="#contato">Contato</a>
+    </nav>
 
-      <button class="btn-home" onclick="irPara('fluxo')">
-        <div class="btn-home-icone ouro">📊</div>
-        <div>
-          <div class="btn-home-titulo">Fluxo de Caixa</div>
-          <div class="btn-home-desc">Entradas, saídas e saldo atual</div>
-        </div>
-      </button>
-
-      <button class="btn-home" onclick="abrirWhatsApp()">
-        <div class="btn-home-icone azul">💬</div>
-        <div>
-          <div class="btn-home-titulo">Falar com a Administradora</div>
-          <div class="btn-home-desc">Abre o WhatsApp direto</div>
-        </div>
-      </button>
-    </div>
-  </section>
-
-  <!-- ── TELA CÂMERA ───────────────────────────────────────────────────── -->
-  <section id="tela-camera" class="tela">
-    <h2 style="font-family:'Lora',serif;font-size:1.05rem;color:var(--teal)">Escanear Nota</h2>
-    <p style="font-size:0.78rem;color:var(--ink-soft)">Enquadre o código de barras ou a nota no retângulo dourado. A leitura é automática.</p>
-
-    <div class="camera-wrap">
-      <video id="video-camera" autoplay playsinline muted></video>
-      <div class="camera-guia"></div>
-    </div>
-
-    <div id="msg-camera"></div>
-
-    <button id="btn-capturar" class="btn-primario" disabled onclick="capturarFrameManual()">
-      📸 Capturar agora
+    <button class="btn-header" onclick="scrollParaContato()">Solicitar Diagnóstico Gratuito</button>
+    <button class="menu-mobile" onclick="toggleNavMobile()" aria-label="Menu">
+      <span></span><span></span><span></span>
     </button>
-
-    <!-- Upload de arquivo como alternativa -->
-    <label class="btn-upload">
-      🖼️ Enviar foto da nota
-      <input id="input-arquivo" type="file" accept="image/*" style="display:none" />
-    </label>
-
-    <button class="btn-secundario" onclick="irPara('home')">← Voltar</button>
-  </section>
-
-  <!-- ── TELA PROCESSANDO ──────────────────────────────────────────────── -->
-  <section id="tela-processando" class="tela">
-    <div class="processando-wrap">
-      <div class="spinner-grande"></div>
-      <p id="status-processando">Lendo nota...</p>
-      <p id="ocr-progresso"></p>
-    </div>
-  </section>
-
-  <!-- ── TELA CONFIRMAÇÃO ──────────────────────────────────────────────── -->
-  <section id="tela-confirmacao" class="tela">
-    <h2 style="font-family:'Lora',serif;font-size:1.05rem;color:var(--teal)">Confirmar Dados</h2>
-    <p style="font-size:0.78rem;color:var(--ink-soft)">Verifique os campos abaixo. Corrija o que precisar antes de salvar.</p>
-
-    <form id="form-confirmacao" style="display:flex;flex-direction:column;gap:12px">
-      <div class="campo">
-        <label>Número da Nota</label>
-        <input id="conf-numero" name="conf-numero" type="text" placeholder="Ex: 000123" class="mono" />
-      </div>
-      <div class="campo">
-        <label>Emissor / Razão Social</label>
-        <input id="conf-emissor" name="conf-emissor" type="text" placeholder="Nome de quem emitiu" />
-      </div>
-      <div class="campo">
-        <label>Vencimento</label>
-        <input id="conf-vencimento" name="conf-vencimento" type="text" placeholder="DD/MM/AAAA" class="mono" />
-      </div>
-      <div class="campo">
-        <label>Valor (R$)</label>
-        <input id="conf-valor" name="conf-valor" type="text" placeholder="0,00" class="mono" />
-      </div>
-      <div class="campo">
-        <label>Tipo da Nota</label>
-        <select id="conf-tipo" name="conf-tipo">
-          <option value="">— Selecione —</option>
-          <option value="Serviço">Serviço (NFS-e / ISS)</option>
-          <option value="Material">Material (NF-e / ICMS)</option>
-        </select>
-      </div>
-      <button type="submit" class="btn-primario">💾 Salvar nota</button>
-      <button type="button" class="btn-secundario" onclick="irPara('home')">Cancelar</button>
-    </form>
-  </section>
-
-  <!-- ── TELA NOTAS LIDAS ──────────────────────────────────────────────── -->
-  <section id="tela-notas" class="tela tela-principal">
-    <h2 style="font-family:'Lora',serif;font-size:1.05rem;color:var(--teal)">Notas Lidas</h2>
-    <div id="lista-notas" class="secao-gap"></div>
-  </section>
-
-  <!-- ── TELA FLUXO DE CAIXA ──────────────────────────────────────────── -->
-  <section id="tela-fluxo" class="tela tela-principal">
-    <h2 style="font-family:'Lora',serif;font-size:1.05rem;color:var(--teal)">Fluxo de Caixa</h2>
-
-    <!-- Cartão de saldo -->
-    <div class="card-saldo">
-      <div class="saldo-label">Saldo Atual</div>
-      <div id="saldo-atual" class="saldo-valor positivo">R$ 0,00</div>
-      <div class="saldo-linha">
-        <div><span>Entradas</span><strong id="total-entradas">R$ 0,00</strong></div>
-        <div><span>Saídas</span><strong id="total-saidas">R$ 0,00</strong></div>
-      </div>
-    </div>
-
-    <!-- Gráfico -->
-    <canvas id="grafico-fluxo"></canvas>
-
-    <!-- Formulário de entrada manual -->
-    <div class="card-form">
-      <h3>+ Registrar Entrada</h3>
-      <form id="form-entrada" style="display:flex;flex-direction:column;gap:10px">
-        <div class="campo">
-          <label>Descrição</label>
-          <input name="entrada-descricao" type="text" placeholder="Ex: Pagamento recebido" required />
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div class="campo">
-            <label>Valor (R$)</label>
-            <input name="entrada-valor" type="number" step="0.01" min="0.01" placeholder="0,00" required class="mono" />
-          </div>
-          <div class="campo">
-            <label>Data</label>
-            <input id="entrada-data" name="entrada-data" type="date" required />
-          </div>
-        </div>
-        <button type="submit" class="btn-ouro">Registrar</button>
-      </form>
-    </div>
-
-    <!-- Lista de lançamentos -->
-    <p class="secao-titulo">Lançamentos recentes</p>
-    <div id="lista-lancamentos" class="secao-gap"></div>
-  </section>
-
-  <!-- ── Nav inferior ──────────────────────────────────────────────────── -->
-  <nav class="nav-inferior">
-    <button class="nav-btn ativo" onclick="irPara('home');atualizarNav(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-      Início
-    </button>
-    <button class="nav-btn" onclick="irPara('camera');atualizarNav(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      Escanear
-    </button>
-    <button class="nav-btn" onclick="irPara('notas');atualizarNav(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Notas
-    </button>
-    <button class="nav-btn" onclick="irPara('fluxo');atualizarNav(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Fluxo
-    </button>
+  </div>
+  <nav class="nav-mobile" id="nav-mobile">
+    <a href="#inicio" onclick="fecharNavMobile()">Início</a>
+    <a href="#servicos" onclick="fecharNavMobile()">Serviços</a>
+    <a href="#diferenciais" onclick="fecharNavMobile()">Benefícios</a>
+    <a href="#sobre" onclick="fecharNavMobile()">Sobre Nós</a>
+    <a href="#depoimentos" onclick="fecharNavMobile()">Depoimentos</a>
+    <a href="#contato" onclick="fecharNavMobile()">Contato</a>
+    <a href="#contato" onclick="fecharNavMobile()" style="background:var(--ouro);color:var(--cinza-escuro);font-weight:700;text-align:center;margin-top:8px;">Diagnóstico Gratuito</a>
   </nav>
+</header>
 
-</div><!-- /container -->
+<!-- ── Hero ───────────────────────────────────────────────────────────────── -->
+<section id="inicio">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-inner container">
+    <div>
+      <div class="hero-badge">✦ Especialistas em BPO Financeiro</div>
+      <h1 class="hero-titulo">
+        Gestão Financeira <em>Inteligente</em> para Empresas que Querem Crescer
+      </h1>
+      <p class="hero-subtitulo">
+        Organizamos seu financeiro, reduzimos custos e entregamos informações estratégicas para que sua empresa cresça com segurança e previsibilidade.
+      </p>
+      <div class="hero-botoes">
+        <button class="btn-primario" onclick="scrollParaContato()">
+          📊 Solicitar Diagnóstico
+        </button>
+        <a class="btn-outline" href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20conhecer%20os%20serviços%20da%20Helmigui%20Serviços%20Financeiros." target="_blank">
+          💬 Falar no WhatsApp
+        </a>
+      </div>
+    </div>
 
+    <!-- Dashboard financeiro -->
+    <div class="hero-dashboard">
+      <div class="dash-header">
+        <span class="dash-titulo">📊 Dashboard Financeiro</span>
+        <span class="dash-badge">● Ao vivo</span>
+      </div>
+      <div class="dash-cards">
+        <div class="dash-card">
+          <div class="dash-card-label">Receita Mensal</div>
+          <div class="dash-card-valor verde">R$ 247k</div>
+          <div class="dash-card-var up">↑ 18% este mês</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-label">Fluxo de Caixa</div>
+          <div class="dash-card-valor ouro">R$ 89k</div>
+          <div class="dash-card-var up">↑ 12% positivo</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-label">Contas a Pagar</div>
+          <div class="dash-card-valor branco">R$ 31k</div>
+          <div class="dash-card-var down">3 vencendo hoje</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-label">Inadimplência</div>
+          <div class="dash-card-valor verde">2,1%</div>
+          <div class="dash-card-var up">↓ -0.8% vs mês ant.</div>
+        </div>
+      </div>
+      <div class="dash-grafico">
+        <div class="dash-barra" style="height:40%"></div>
+        <div class="dash-barra alt" style="height:55%"></div>
+        <div class="dash-barra" style="height:35%"></div>
+        <div class="dash-barra alt" style="height:70%"></div>
+        <div class="dash-barra" style="height:50%"></div>
+        <div class="dash-barra alt" style="height:85%"></div>
+        <div class="dash-barra" style="height:60%"></div>
+        <div class="dash-barra alt" style="height:90%"></div>
+        <div class="dash-barra" style="height:75%"></div>
+        <div class="dash-barra alt" style="height:95%"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Serviços ────────────────────────────────────────────────────────────── -->
+<section id="servicos">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="secao-eyebrow">O que fazemos</p>
+      <h2 class="secao-titulo">Soluções Financeiras <em>Completas</em></h2>
+      <p class="secao-subtitulo">Desde a organização do dia a dia financeiro até relatórios estratégicos para tomada de decisão.</p>
+    </div>
+    <div class="servicos-grid">
+      <div class="card-servico reveal">
+        <div class="card-servico-icone">💰</div>
+        <h3>Fluxo de Caixa</h3>
+        <p>Controle completo das entradas e saídas com visibilidade em tempo real da saúde financeira da sua empresa.</p>
+        <span class="card-servico-link">Saiba mais →</span>
+      </div>
+      <div class="card-servico reveal">
+        <div class="card-servico-icone">📤</div>
+        <h3>Contas a Pagar</h3>
+        <p>Organização, programação e controle de todas as obrigações financeiras para eliminar atrasos e juros desnecessários.</p>
+        <span class="card-servico-link">Saiba mais →</span>
+      </div>
+      <div class="card-servico reveal">
+        <div class="card-servico-icone">📥</div>
+        <h3>Contas a Receber</h3>
+        <p>Controle eficiente de recebimentos, cobranças e inadimplência para maximizar a entrada de caixa.</p>
+        <span class="card-servico-link">Saiba mais →</span>
+      </div>
+      <div class="card-servico reveal">
+        <div class="card-servico-icone">🏦</div>
+        <h3>Conciliação Bancária</h3>
+        <p>Maior segurança e transparência com a conferência sistemática entre registros internos e extratos bancários.</p>
+        <span class="card-servico-link">Saiba mais →</span>
+      </div>
+      <div class="card-servico reveal">
+        <div class="card-servico-icone">📈</div>
+        <h3>Relatórios Gerenciais</h3>
+        <p>Indicadores e dashboards estratégicos para que os sócios tomem decisões com dados precisos e confiáveis.</p>
+        <span class="card-servico-link">Saiba mais →</span>
+      </div>
+      <div class="card-servico reveal">
+        <div class="card-servico-icone">🎯</div>
+        <h3>Planejamento Financeiro</h3>
+        <p>Estratégias personalizadas para crescimento sustentável, com metas, orçamento e acompanhamento contínuo.</p>
+        <span class="card-servico-link">Saiba mais →</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Diferenciais ────────────────────────────────────────────────────────── -->
+<section id="diferenciais">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="secao-eyebrow">Nossos diferenciais</p>
+      <h2 class="secao-titulo">Por que escolher a <em>Helmigui?</em></h2>
+    </div>
+    <div class="diferenciais-grid">
+      <div class="card-diferencial reveal">
+        <div class="diferencial-check">✓</div>
+        <div>
+          <h4>Atendimento Personalizado</h4>
+          <p>Cada cliente tem um consultor dedicado que conhece profundamente o seu negócio.</p>
+        </div>
+      </div>
+      <div class="card-diferencial reveal">
+        <div class="diferencial-check">✓</div>
+        <div>
+          <h4>Processos Organizados</h4>
+          <p>Metodologia estruturada para padronizar e automatizar a rotina financeira da sua empresa.</p>
+        </div>
+      </div>
+      <div class="card-diferencial reveal">
+        <div class="diferencial-check">✓</div>
+        <div>
+          <h4>Relatórios Estratégicos</h4>
+          <p>Informações claras e objetivas para suportar decisões de negócio com segurança.</p>
+        </div>
+      </div>
+      <div class="card-diferencial reveal">
+        <div class="diferencial-check">✓</div>
+        <div>
+          <h4>Redução de Custos</h4>
+          <p>Identificação de desperdícios e otimização da estrutura de custos para aumentar a margem.</p>
+        </div>
+      </div>
+      <div class="card-diferencial reveal">
+        <div class="diferencial-check">✓</div>
+        <div>
+          <h4>Segurança das Informações</h4>
+          <p>Proteção total dos dados financeiros com processos rigorosos de confidencialidade e LGPD.</p>
+        </div>
+      </div>
+      <div class="card-diferencial reveal">
+        <div class="diferencial-check">✓</div>
+        <div>
+          <h4>Foco no Crescimento do Cliente</h4>
+          <p>Nossa missão é que cada cliente cresça mais e melhor com o suporte da Helmigui.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Números ─────────────────────────────────────────────────────────────── -->
+<section id="numeros">
+  <div class="container">
+    <div class="numeros-grid">
+      <div class="numero-item reveal">
+        <span class="numero-valor" data-alvo="100" data-prefixo="+" data-sufixo="">+100</span>
+        <span class="numero-label">Empresas Atendidas</span>
+      </div>
+      <div class="numero-item reveal">
+        <span class="numero-valor" data-alvo="10" data-prefixo="+R$ " data-sufixo=" Mi">+R$ 10 Mi</span>
+        <span class="numero-label">Gerenciados</span>
+      </div>
+      <div class="numero-item reveal">
+        <span class="numero-valor" data-alvo="98" data-prefixo="" data-sufixo="%">98%</span>
+        <span class="numero-label">Taxa de Satisfação</span>
+      </div>
+      <div class="numero-item reveal">
+        <span class="numero-valor" data-alvo="24" data-prefixo="" data-sufixo="h">24h</span>
+        <span class="numero-label">Suporte ao Cliente</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Como funciona ───────────────────────────────────────────────────────── -->
+<section id="como-funciona">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="secao-eyebrow">Metodologia</p>
+      <h2 class="secao-titulo">Como <em>Funciona</em></h2>
+      <p class="secao-subtitulo">Um processo claro e eficiente para transformar a gestão financeira da sua empresa.</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-num">1</div>
+        <div class="timeline-conteudo">
+          <h4>Diagnóstico Financeiro</h4>
+          <p>Analisamos toda a situação financeira atual da empresa — fluxo de caixa, dívidas, recebimentos e estrutura de custos.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-num">2</div>
+        <div class="timeline-conteudo">
+          <h4>Mapeamento dos Processos</h4>
+          <p>Identificamos gargalos, falhas e oportunidades de melhoria em todos os processos financeiros.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-num">3</div>
+        <div class="timeline-conteudo">
+          <h4>Implementação</h4>
+          <p>Estruturamos os processos, implantamos as ferramentas e treinamos a equipe para garantir a execução.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-num">4</div>
+        <div class="timeline-conteudo">
+          <h4>Monitoramento Contínuo</h4>
+          <p>Acompanhamos os indicadores diariamente e interagimos com a equipe para manter tudo sob controle.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-num">5</div>
+        <div class="timeline-conteudo">
+          <h4>Relatórios Estratégicos</h4>
+          <p>Entregamos relatórios mensais com análises e recomendações para que o empresário tome decisões com clareza.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Sobre ───────────────────────────────────────────────────────────────── -->
+<section id="sobre">
+  <div class="container">
+    <div class="sobre-inner">
+      <div class="sobre-img-wrap reveal">
+        <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="100" width="20" height="40" fill="rgba(212,175,55,.4)" rx="3"/>
+          <rect x="50" y="70" width="20" height="70" fill="rgba(212,175,55,.6)" rx="3"/>
+          <rect x="80" y="50" width="20" height="90" fill="rgba(212,175,55,.8)" rx="3"/>
+          <rect x="110" y="30" width="20" height="110" fill="rgba(212,175,55,.9)" rx="3"/>
+          <rect x="140" y="15" width="20" height="125" fill="rgba(212,175,55,1)" rx="3"/>
+          <polyline points="30,100 60,70 90,50 120,30 150,15" stroke="rgba(255,255,255,.6)" stroke-width="2" fill="none"/>
+        </svg>
+        <div class="sobre-badge">🏆 Fundada em 2020</div>
+      </div>
+      <div class="sobre-texto reveal">
+        <p class="secao-eyebrow">Quem somos</p>
+        <h2 class="secao-titulo">A <em>Helmigui</em> Serviços Financeiros</h2>
+        <p>A Helmigui Serviços Financeiros nasceu com a missão de ajudar empresas a organizarem suas finanças e tomarem decisões estratégicas através de processos eficientes, tecnologia e acompanhamento especializado.</p>
+        <p>Acreditamos que toda empresa merece ter acesso a uma gestão financeira de qualidade, independente do porte ou segmento. Nossa equipe combina expertise financeira com tecnologia para entregar resultados reais e mensuráveis.</p>
+        <div class="sobre-stats">
+          <div class="sobre-stat"><div class="sobre-stat-num">+5 anos</div><div class="sobre-stat-txt">de experiência no mercado</div></div>
+          <div class="sobre-stat"><div class="sobre-stat-num">100%</div><div class="sobre-stat-txt">foco em resultados</div></div>
+          <div class="sobre-stat"><div class="sobre-stat-num">12</div><div class="sobre-stat-txt">especialistas na equipe</div></div>
+          <div class="sobre-stat"><div class="sobre-stat-num">3x</div><div class="sobre-stat-txt">mais crescimento médio</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Depoimentos ─────────────────────────────────────────────────────────── -->
+<section id="depoimentos">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="secao-eyebrow">O que dizem nossos clientes</p>
+      <h2 class="secao-titulo">Depoimentos <em>Reais</em></h2>
+    </div>
+    <div class="slider-wrap reveal">
+      <div class="slider-track" id="slider-track">
+        <div class="card-depoimento">
+          <div class="depo-estrelas">★★★★★</div>
+          <p class="depo-texto">"A Helmigui transformou completamente a gestão financeira da nossa empresa. Antes vivíamos no escuro; agora temos visibilidade total do fluxo de caixa e relatórios claros toda semana."</p>
+          <div class="depo-autor">
+            <div class="depo-avatar">RB</div>
+            <div><div class="depo-nome">Ricardo Borges</div><div class="depo-cargo">CEO — Construtora Borges & Filhos</div></div>
+          </div>
+        </div>
+        <div class="card-depoimento">
+          <div class="depo-estrelas">★★★★★</div>
+          <p class="depo-texto">"Reduzimos 22% dos custos operacionais no primeiro trimestre com a Helmigui. A equipe é extremamente comprometida e entende profundamente do negócio."</p>
+          <div class="depo-autor">
+            <div class="depo-avatar">AM</div>
+            <div><div class="depo-nome">Ana Marques</div><div class="depo-cargo">Diretora Financeira — Grupo AM Logística</div></div>
+          </div>
+        </div>
+        <div class="card-depoimento">
+          <div class="depo-estrelas">★★★★★</div>
+          <p class="depo-texto">"Nosso índice de inadimplência caiu de 8% para 1,5% em 6 meses. Os processos de cobrança implementados pela Helmigui são muito eficientes."</p>
+          <div class="depo-autor">
+            <div class="depo-avatar">CF</div>
+            <div><div class="depo-nome">Carlos Figueiredo</div><div class="depo-cargo">Sócio — Clínica Figueiredo</div></div>
+          </div>
+        </div>
+        <div class="card-depoimento">
+          <div class="depo-estrelas">★★★★★</div>
+          <p class="depo-texto">"O relatório gerencial mensal da Helmigui me dá confiança para tomar decisões importantes. Finalmente consigo ver a saúde real da empresa com clareza."</p>
+          <div class="depo-autor">
+            <div class="depo-avatar">PS</div>
+            <div><div class="depo-nome">Patricia Santos</div><div class="depo-cargo">Proprietária — Rede PS Varejo</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slider-dots" id="slider-dots"></div>
+  </div>
+</section>
+
+<!-- ── Benefícios ──────────────────────────────────────────────────────────── -->
+<section id="beneficios">
+  <div class="container">
+    <div class="beneficios-inner">
+      <div class="beneficios-img reveal">
+        <div class="mini-dash">
+          <div class="mini-dash-row">
+            <span class="mini-dash-label">Controle</span>
+            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:92%"></div></div>
+            <span class="mini-dash-val">92%</span>
+          </div>
+          <div class="mini-dash-row">
+            <span class="mini-dash-label">Eficiência</span>
+            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:87%"></div></div>
+            <span class="mini-dash-val">87%</span>
+          </div>
+          <div class="mini-dash-row">
+            <span class="mini-dash-label">Lucro</span>
+            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:78%"></div></div>
+            <span class="mini-dash-val">+78%</span>
+          </div>
+          <div class="mini-dash-row">
+            <span class="mini-dash-label">Satisfação</span>
+            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:98%"></div></div>
+            <span class="mini-dash-val">98%</span>
+          </div>
+          <div class="mini-dash-row">
+            <span class="mini-dash-label">Crescimento</span>
+            <div class="mini-dash-bar-wrap"><div class="mini-dash-bar" style="width:65%"></div></div>
+            <span class="mini-dash-val">+65%</span>
+          </div>
+        </div>
+      </div>
+      <div class="reveal">
+        <p class="secao-eyebrow">Benefícios reais</p>
+        <h2 class="secao-titulo">O que você ganha com a <em>Helmigui</em></h2>
+        <div class="beneficios-lista">
+          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Mais controle financeiro</h4><p>Visibilidade total de entradas, saídas e saldo em tempo real.</p></div></div>
+          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Menos retrabalho</h4><p>Processos padronizados que eliminam erros e reprocessamentos.</p></div></div>
+          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Informações em tempo real</h4><p>Dados atualizados continuamente para decisões rápidas e precisas.</p></div></div>
+          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Decisões mais inteligentes</h4><p>Relatórios gerenciais com indicadores que orientam a estratégia.</p></div></div>
+          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Crescimento sustentável</h4><p>Base financeira sólida para expandir com segurança.</p></div></div>
+          <div class="beneficio-item"><div class="beneficio-check">✓</div><div><h4>Maior lucratividade</h4><p>Redução de custos e aumento da eficiência geram mais margem.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ─────────────────────────────────────────────────────────────────── -->
+<section id="cta">
+  <div class="container reveal">
+    <h2 class="cta-titulo">Pronto para Transformar a Gestão Financeira da Sua Empresa?</h2>
+    <p class="cta-sub">Agende agora um diagnóstico gratuito e descubra o potencial financeiro do seu negócio.</p>
+    <div class="cta-botoes">
+      <button class="btn-verde" onclick="scrollParaContato()">📊 Solicitar Diagnóstico Gratuito</button>
+      <a class="btn-wpp" href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20conhecer%20os%20serviços%20da%20Helmigui%20Serviços%20Financeiros." target="_blank">
+        💬 Falar no WhatsApp
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Contato ─────────────────────────────────────────────────────────────── -->
+<section id="contato">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="secao-eyebrow">Fale conosco</p>
+      <h2 class="secao-titulo">Entre em <em>Contato</em></h2>
+    </div>
+    <div class="contato-inner">
+      <div class="reveal">
+        <h3>Informações de Contato</h3>
+        <div class="contato-item">
+          <div class="contato-icone">📱</div>
+          <div><h4>WhatsApp</h4><p>(11) 99999-9999</p></div>
+        </div>
+        <div class="contato-item">
+          <div class="contato-icone">📧</div>
+          <div><h4>E-mail</h4><p>contato@helmigui.com.br</p></div>
+        </div>
+        <div class="contato-item">
+          <div class="contato-icone">📍</div>
+          <div><h4>Localização</h4><p>São Paulo, SP — Brasil</p></div>
+        </div>
+        <div class="contato-item">
+          <div class="contato-icone">🕐</div>
+          <div><h4>Horário de Atendimento</h4><p>Seg–Sex: 8h às 18h</p></div>
+        </div>
+      </div>
+      <div class="form-contato reveal">
+        <form id="form-contato">
+          <div class="form-grid">
+            <div class="form-campo">
+              <label>Nome *</label>
+              <input type="text" name="nome" placeholder="Seu nome" required />
+            </div>
+            <div class="form-campo">
+              <label>Empresa *</label>
+              <input type="text" name="empresa" placeholder="Nome da empresa" required />
+            </div>
+            <div class="form-campo">
+              <label>Telefone *</label>
+              <input type="tel" name="telefone" placeholder="(00) 00000-0000" required />
+            </div>
+            <div class="form-campo">
+              <label>E-mail *</label>
+              <input type="email" name="email" placeholder="seu@email.com" required />
+            </div>
+            <div class="form-campo full">
+              <label>Mensagem</label>
+              <textarea name="mensagem" placeholder="Como podemos ajudar sua empresa?"></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn-form">
+            <span id="btn-form-txt">Enviar Mensagem 📤</span>
+          </button>
+          <p id="msg-form"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Rodapé ──────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <img src="identidade-visual/logo-oficial.png" alt="Helmigui" class="footer-logo"
+             onerror="this.style.display='none'" />
+        <p class="footer-desc">Especialistas em BPO Financeiro, gestão financeira empresarial e consultoria estratégica para empresas que querem crescer com segurança.</p>
+        <div class="footer-social">
+          <a href="#" title="Instagram">📸</a>
+          <a href="#" title="LinkedIn">💼</a>
+          <a href="https://wa.me/5511999999999" target="_blank" title="WhatsApp">💬</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Links Rápidos</h4>
+        <ul>
+          <li><a href="#inicio">Início</a></li>
+          <li><a href="#servicos">Serviços</a></li>
+          <li><a href="#sobre">Sobre Nós</a></li>
+          <li><a href="#depoimentos">Depoimentos</a></li>
+          <li><a href="#contato">Contato</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Serviços</h4>
+        <ul>
+          <li><a href="#servicos">Fluxo de Caixa</a></li>
+          <li><a href="#servicos">Contas a Pagar</a></li>
+          <li><a href="#servicos">Contas a Receber</a></li>
+          <li><a href="#servicos">Conciliação Bancária</a></li>
+          <li><a href="#servicos">Relatórios Gerenciais</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contato</h4>
+        <ul>
+          <li><a href="tel:+5511999999999">📱 (11) 99999-9999</a></li>
+          <li><a href="mailto:contato@helmigui.com.br">📧 contato@helmigui.com.br</a></li>
+          <li><a href="https://wa.me/5511999999999" target="_blank">💬 WhatsApp</a></li>
+          <li><a href="#" onclick="alert('Portal do cliente em breve!')" style="color:var(--ouro)">🔐 Portal do Cliente</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Helmigui Serviços Financeiros. Todos os direitos reservados.</p>
+      <p>
+        <a href="#">Política de Privacidade</a> &nbsp;·&nbsp;
+        <a href="#">LGPD</a>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- ── WhatsApp flutuante ──────────────────────────────────────────────────── -->
+<a class="wpp-float" href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20conhecer%20os%20serviços%20da%20Helmigui%20Serviços%20Financeiros." target="_blank" title="Fale conosco no WhatsApp">
+  💬
+</a>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────────────── -->
 <script>
-function atualizarNav(btn) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
-  btn.classList.add('ativo');
-}
-// Quando a câmera for aberta pelo botão home também marca o nav
-const _abrirCamera = abrirCamera;
-window.abrirCamera = function() { document.querySelectorAll('.nav-btn')[1].classList.add('ativo'); _abrirCamera(); };
-</script>
+// ── Header scroll ──────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('header').classList.toggle('scrolled', window.scrollY > 40);
+});
 
-<script src="config.js"></script>
-<script src="barcode.js"></script>
-<script src="ocr.js"></script>
-<script src="app.js"></script>
+// ── Nav mobile ─────────────────────────────────────────────────────────────
+function toggleNavMobile() { document.getElementById('nav-mobile').classList.toggle('aberto'); }
+function fecharNavMobile() { document.getElementById('nav-mobile').classList.remove('aberto'); }
+
+// ── Scroll para contato ────────────────────────────────────────────────────
+function scrollParaContato() {
+  document.getElementById('contato').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Scroll reveal ──────────────────────────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visivel'); }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal, .timeline-item').forEach(el => observer.observe(el));
+
+// ── Contador animado ───────────────────────────────────────────────────────
+function animarContador(el) {
+  const alvo = parseInt(el.dataset.alvo);
+  const prefixo = el.dataset.prefixo || '';
+  const sufixo = el.dataset.sufixo || '';
+  let atual = 0;
+  const duracao = 1800;
+  const passo = alvo / (duracao / 16);
+  const timer = setInterval(() => {
+    atual = Math.min(atual + passo, alvo);
+    el.textContent = prefixo + Math.round(atual) + sufixo;
+    if (atual >= alvo) clearInterval(timer);
+  }, 16);
+}
+
+const obsNums = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('[data-alvo]').forEach(animarContador);
+      obsNums.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.4 });
+const secNums = document.getElementById('numeros');
+if (secNums) obsNums.observe(secNums);
+
+// ── Slider de depoimentos ──────────────────────────────────────────────────
+(function() {
+  const track = document.getElementById('slider-track');
+  const dotsWrap = document.getElementById('slider-dots');
+  if (!track) return;
+
+  const cards = track.querySelectorAll('.card-depoimento');
+  const total = cards.length;
+  let atual = 0;
+  let timer;
+
+  // Cria dots
+  cards.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.className = 'slider-dot' + (i === 0 ? ' ativo' : '');
+    d.addEventListener('click', () => irPara(i));
+    dotsWrap.appendChild(d);
+  });
+
+  function irPara(idx) {
+    atual = idx;
+    const cardW = cards[0].offsetWidth + 24;
+    track.style.transform = `translateX(-${atual * cardW}px)`;
+    dotsWrap.querySelectorAll('.slider-dot').forEach((d, i) => {
+      d.classList.toggle('ativo', i === atual);
+    });
+    clearTimeout(timer);
+    timer = setTimeout(proximo, 4500);
+  }
+
+  function proximo() { irPara((atual + 1) % total); }
+  timer = setTimeout(proximo, 4500);
+  window.addEventListener('resize', () => irPara(atual));
+})();
+
+// ── Formulário de contato (EmailJS) ───────────────────────────────────────
+emailjs.init('SUA_PUBLIC_KEY'); // Substitua pela sua chave pública do EmailJS
+
+document.getElementById('form-contato').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-form-txt');
+  const msg = document.getElementById('msg-form');
+  btn.textContent = 'Enviando...';
+
+  try {
+    await emailjs.sendForm('SUA_SERVICE_ID', 'SUA_TEMPLATE_ID', this);
+    msg.textContent = '✅ Mensagem enviada! Entraremos em contato em breve.';
+    msg.className = 'ok'; msg.style.display = 'block';
+    this.reset();
+  } catch {
+    msg.textContent = '❌ Erro ao enviar. Tente pelo WhatsApp ou e-mail.';
+    msg.className = 'erro'; msg.style.display = 'block';
+  } finally {
+    btn.textContent = 'Enviar Mensagem 📤';
+  }
+});
+</script>
 </body>
 </html>

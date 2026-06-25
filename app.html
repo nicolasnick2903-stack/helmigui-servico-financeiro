@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1E4D25" />
+  <meta name="description" content="Helmigui Serviços Financeiros — leitura de notas e fluxo de caixa" />
+
+  <!-- PWA / iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Helmigui" />
+  <link rel="apple-touch-icon" href="identidade-visual/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="identidade-visual/icon-mark.png" />
+
+  <!-- Tipografia -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- ZXing (leitor de código de barras) -->
+  <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+  <!-- Tesseract.js (OCR) -->
+  <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <title>Helmigui Serviços Financeiros</title>
+
+  <style>
+    /* ── Tokens de cor da marca ─────────────────────────────────────────── */
+    :root {
+      --paper: #F1F4EC;
+      --paper-deep: #E5EADC;
+      --ink: #1C2B22;
+      --ink-soft: #5B6B5E;
+      --teal: #1E4D25;
+      --teal-light: #2F6B3E;
+      --gold: #D1A84E;
+      --clay: #A8472E;
+      --line: #C9D1BD;
+      --radius: 12px;
+      --sombra: 0 2px 12px rgba(28,43,34,.10);
+    }
+
+    /* ── Reset e base ────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Container central (layout desktop) ─────────────────────────────── */
+    .container {
+      width: 100%;
+      max-width: 520px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Cabeçalho ───────────────────────────────────────────────────────── */
+    .cabecalho {
+      background: var(--teal);
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .cabecalho img.logo {
+      height: 40px;
+      object-fit: contain;
+    }
+    .cabecalho-titulo {
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .btn-admin-link {
+      font-size: 0.72rem;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 4px 8px;
+      border: 1px solid var(--gold);
+      border-radius: 6px;
+    }
+
+    /* ── Telas ───────────────────────────────────────────────────────────── */
+    .tela {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      padding: 20px 16px 32px;
+      gap: 16px;
+    }
+    .tela.ativa { display: flex; }
+
+    /* ── Banner de instalação ────────────────────────────────────────────── */
+    .banner-instalar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: var(--teal-light);
+      color: #fff;
+      padding: 10px 16px;
+      font-size: 0.82rem;
+      border-bottom: 2px solid var(--gold);
+    }
+    .banner-instalar button {
+      margin-left: auto;
+      background: var(--gold);
+      color: var(--ink);
+      border: none;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+    .banner-instalar .btn-fechar {
+      background: transparent;
+      color: #fff;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 4px 6px;
+      margin-left: 0;
+    }
+
+    /* ── Home — 3 botões principais ──────────────────────────────────────── */
+    .home-boas-vindas {
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+    .home-boas-vindas img {
+      width: min(220px, 80%);
+      object-fit: contain;
+      margin-bottom: 12px;
+    }
+    .home-boas-vindas h1 {
+      font-family: 'Lora', serif;
+      font-size: 1.15rem;
+      color: var(--teal);
+      margin-bottom: 4px;
+    }
+    .home-boas-vindas p {
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+    }
+
+    .grid-botoes {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-home {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      cursor: pointer;
+      box-shadow: var(--sombra);
+      text-align: left;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .btn-home:hover { border-color: var(--teal); box-shadow: 0 4px 16px rgba(30,77,37,.14); }
+    .btn-home-icone {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .btn-home-icone.verde { background: #E6F0E8; }
+    .btn-home-icone.ouro  { background: #FAF3E3; }
+    .btn-home-icone.azul  { background: #E3EDF5; }
+    .btn-home-titulo { font-weight: 600; font-size: 0.95rem; color: var(--ink); }
+    .btn-home-desc   { font-size: 0.75rem; color: var(--ink-soft); margin-top: 2px; }
+
+    /* ── Nav inferior ────────────────────────────────────────────────────── */
+    .nav-inferior {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-top: 1px solid var(--line);
+      display: flex;
+      z-index: 10;
+    }
+    .nav-btn {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 8px 4px 10px;
+      font-size: 0.65rem;
+      color: var(--ink-soft);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      gap: 3px;
+      transition: color .15s;
+    }
+    .nav-btn svg { width: 22px; height: 22px; }
+    .nav-btn.ativo { color: var(--teal); font-weight: 600; }
+    .tela-principal { padding-bottom: 80px !important; }
+
+    /* ── Câmera ──────────────────────────────────────────────────────────── */
+    .camera-wrap {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 4/3;
+      width: 100%;
+    }
+    #video-camera {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .camera-guia {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%; height: 30%;
+      border: 2.5px solid var(--gold);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+    .camera-guia::before,
+    .camera-guia::after {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      border-color: var(--gold);
+      border-style: solid;
+    }
+    .camera-guia::before { top: -3px; left: -3px; border-width: 3px 0 0 3px; }
+    .camera-guia::after  { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; }
+
+    #msg-camera {
+      display: none;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+    }
+
+    /* ── Processando ─────────────────────────────────────────────────────── */
+    .processando-wrap {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px; min-height: 250px; text-align: center;
+    }
+    .spinner-grande {
+      width: 52px; height: 52px;
+      border: 5px solid var(--paper-deep);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #status-processando { font-size: 0.9rem; color: var(--ink-soft); }
+    #ocr-progresso { font-size: 0.78rem; color: var(--ink-soft); }
+
+    /* ── Formulários ─────────────────────────────────────────────────────── */
+    .campo { display: flex; flex-direction: column; gap: 5px; }
+    .campo label { font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+    .campo input,
+    .campo select,
+    .campo textarea {
+      background: #fff;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      color: var(--ink);
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .campo input:focus,
+    .campo select:focus { border-color: var(--teal); }
+    .campo input.mono { font-family: 'IBM Plex Mono', monospace; }
+
+    /* ── Botões ──────────────────────────────────────────────────────────── */
+    .btn-primario {
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 13px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background .15s;
+    }
+    .btn-primario:hover { background: var(--teal-light); }
+    .btn-primario:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-secundario {
+      background: var(--paper-deep);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-perigo {
+      background: rgba(168,71,46,.1);
+      color: var(--clay);
+      border: 1px solid rgba(168,71,46,.25);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-mini-perigo {
+      background: none; border: none;
+      color: var(--clay); cursor: pointer;
+      font-size: 0.8rem; padding: 4px 6px;
+    }
+    .btn-ouro {
+      background: var(--gold);
+      color: var(--ink);
+      border: none;
+      border-radius: var(--radius);
+      padding: 13px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn-upload {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--paper-deep);
+      border: 1.5px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: var(--ink-soft);
+      font-weight: 500;
+      transition: border-color .15s;
+    }
+    .btn-upload:hover { border-color: var(--teal); }
+
+    /* ── Cards de nota ───────────────────────────────────────────────────── */
+    .card-nota {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--sombra);
+    }
+    .nota-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .nota-emissor { font-weight: 700; font-size: 0.9rem; flex: 1; margin-right: 8px; }
+    .badge-tipo {
+      font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
+      border-radius: 20px; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .badge-tipo.servico { background: #E6F0E8; color: var(--teal); }
+    .badge-tipo.material { background: #FAF3E3; color: #8A6200; }
+    .nota-linha {
+      display: flex; gap: 8px;
+      font-size: 0.8rem; margin-bottom: 4px;
+    }
+    .nota-label { color: var(--ink-soft); min-width: 44px; }
+    .nota-valor-txt { color: var(--ink); }
+    .valor-destaque { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--clay); }
+    .nota-acoes { display: flex; gap: 8px; margin-top: 12px; }
+
+    /* ── Fluxo de caixa ──────────────────────────────────────────────────── */
+    .card-saldo {
+      background: var(--teal);
+      border-radius: var(--radius);
+      padding: 20px;
+      color: #fff;
+      text-align: center;
+    }
+    .saldo-label { font-size: 0.75rem; opacity: .8; text-transform: uppercase; letter-spacing: .08em; }
+    .saldo-valor { font-family: 'IBM Plex Mono', monospace; font-size: 1.8rem; font-weight: 700; margin: 6px 0; }
+    .saldo-valor.positivo { color: #9EE8A8; }
+    .saldo-valor.negativo { color: #F4A99B; }
+    .saldo-linha {
+      display: flex; justify-content: space-around; margin-top: 10px;
+      font-size: 0.78rem;
+    }
+    .saldo-linha span { opacity: .85; }
+    .saldo-linha strong { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.92rem; }
+
+    #grafico-fluxo {
+      width: 100%; height: 140px;
+      border-radius: var(--radius);
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .secao-titulo {
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em;
+    }
+
+    .item-lancamento {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+    .lanc-info { flex: 1; }
+    .lanc-descricao { font-weight: 500; display: block; }
+    .lanc-data { color: var(--ink-soft); font-size: 0.72rem; }
+    .lanc-valor { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.88rem; white-space: nowrap; }
+    .lanc-valor.entrada { color: var(--teal-light); }
+    .lanc-valor.saida   { color: var(--clay); }
+
+    .card-form {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .card-form h3 { font-size: 0.88rem; font-weight: 700; color: var(--ink-soft); }
+
+    /* ── Util ────────────────────────────────────────────────────────────── */
+    .vazio { text-align: center; color: var(--ink-soft); font-size: 0.85rem; padding: 24px 0; }
+    .secao-gap { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── Responsivo desktop ──────────────────────────────────────────────── */
+    @media (min-width: 900px) {
+      body { background: var(--paper-deep); }
+      .container {
+        max-width: 480px;
+        margin: 20px auto;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 40px rgba(28,43,34,.15);
+        background: var(--paper);
+      }
+      .nav-inferior { position: static; border-top: 1px solid var(--line); border-radius: 0 0 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Banner Android ──────────────────────────────────────────────────────── -->
+<div id="banner-instalar-android" class="banner-instalar">
+  <span>📲 Instale o app na sua tela inicial</span>
+  <button onclick="instalarApp()">Instalar</button>
+  <button class="btn-fechar" onclick="this.parentElement.style.display='none'">✕</button>
+</div>
+
+<!-- ── Banner iOS ─────────────────────────────────────────────────────────── -->
+<div id="banner-instalar-ios" class="banner-instalar">
+  <span>📲 Toque em <strong>Compartilhar</strong> e depois em <strong>"Adicionar à Tela de Início"</strong></span>
+  <button class="btn-fechar" onclick="this.parentElement.style.display='none'">✕</button>
+</div>
+
+<!-- ── App container ──────────────────────────────────────────────────────── -->
+<div class="container">
+
+  <!-- Cabeçalho -->
+  <header class="cabecalho">
+    <img src="identidade-visual/logo-oficial.png" alt="Helmigui" class="logo" onerror="this.replaceWith(document.createTextNode('Helmigui'))" />
+    <a href="admin.html" class="btn-admin-link">Admin</a>
+  </header>
+
+  <!-- ── TELA HOME ─────────────────────────────────────────────────────── -->
+  <section id="tela-home" class="tela tela-principal">
+    <div class="home-boas-vindas">
+      <img src="identidade-visual/logo-oficial.png" alt="Helmigui Serviços Financeiros" onerror="this.style.display='none'" />
+      <h1>Olá, bem-vindo!</h1>
+      <p>O que você precisa hoje?</p>
+    </div>
+
+    <div class="grid-botoes">
+      <button class="btn-home" onclick="abrirCamera()">
+        <div class="btn-home-icone verde">📷</div>
+        <div>
+          <div class="btn-home-titulo">Escanear Nota</div>
+          <div class="btn-home-desc">Aponte para boleto ou nota fiscal</div>
+        </div>
+      </button>
+
+      <button class="btn-home" onclick="irPara('fluxo')">
+        <div class="btn-home-icone ouro">📊</div>
+        <div>
+          <div class="btn-home-titulo">Fluxo de Caixa</div>
+          <div class="btn-home-desc">Entradas, saídas e saldo atual</div>
+        </div>
+      </button>
+
+      <button class="btn-home" onclick="abrirWhatsApp()">
+        <div class="btn-home-icone azul">💬</div>
+        <div>
+          <div class="btn-home-titulo">Falar com a Administradora</div>
+          <div class="btn-home-desc">Abre o WhatsApp direto</div>
+        </div>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── TELA CÂMERA ───────────────────────────────────────────────────── -->
+  <section id="tela-camera" class="tela">
+    <h2 style="font-family:'Lora',serif;font-size:1.05rem;color:var(--teal)">Escanear Nota</h2>
+    <p style="font-size:0.78rem;color:var(--ink-soft)">Enquadre o código de barras ou a nota no retângulo dourado. A leitura é automática.</p>
+
+    <div class="camera-wrap">
+      <video id="video-camera" autoplay playsinline muted></video>
+      <div class="camera-guia"></div>
+    </div>
+
+    <div id="msg-camera"></div>
+
+    <button id="btn-capturar" class="btn-primario" disabled onclick="capturarFrameManual()">
+      📸 Capturar agora
+    </button>
+
+    <!-- Upload de arquivo como alternativa -->
+    <label class="btn-upload">
+      🖼️ Enviar foto da nota
+      <input id="input-arquivo" type="file" accept="image/*" style="display:none" />
+    </label>
+
+    <button class="btn-secundario" onclick="irPara('home')">← Voltar</button>
+  </section>
+
+  <!-- ── TELA PROCESSANDO ──────────────────────────────────────────────── -->
+  <section id="tela-processando" class="tela">
+    <div class="processando-wrap">
+      <div class="spinner-grande"></div>
+      <p id="status-processando">Lendo nota...</p>
+      <p id="ocr-progresso"></p>
+    </div>
+  </section>
+
+  <!-- ── TELA CONFIRMAÇÃO ──────────────────────────────────────────────── -->
+  <section id="tela-confirmacao" class="tela">
+    <h2 style="font-family:'Lora',serif;font-size:1.05rem;color:var(--teal)">Confirmar Dados</h2>
+    <p style="font-size:0.78rem;color:var(--ink-soft)">Verifique os campos abaixo. Corrija o que precisar antes de salvar.</p>
+
+    <form id="form-confirmacao" style="display:flex;flex-direction:column;gap:12px">
+      <div class="campo">
+        <label>Número da Nota</label>
+        <input id="conf-numero" name="conf-numero" type="text" placeholder="Ex: 000123" class="mono" />
+      </div>
+      <div class="campo">
+        <label>Emissor / Razão Social</label>
+        <input id="conf-emissor" name="conf-emissor" type="text" placeholder="Nome de quem emitiu" />
+      </div>
+      <div class="campo">
+        <label>Vencimento</label>
+        <input id="conf-vencimento" name="conf-vencimento" type="text" placeholder="DD/MM/AAAA" class="mono" />
+      </div>
+      <div class="campo">
+        <label>Valor (R$)</label>
+        <input id="conf-valor" name="conf-valor" type="text" placeholder="0,00" class="mono" />
+      </div>
+      <div class="campo">
+        <label>Tipo da Nota</label>
+        <select id="conf-tipo" name="conf-tipo">
+          <option value="">— Selecione —</option>
+          <option value="Serviço">Serviço (NFS-e / ISS)</option>
+          <option value="Material">Material (NF-e / ICMS)</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-primario">💾 Salvar nota</button>
+      <button type="button" class="btn-secundario" onclick="irPara('home')">Cancelar</button>
+    </form>
+  </section>
+
+  <!-- ── TELA NOTAS LIDAS ──────────────────────────────────────────────── -->
+  <section id="tela-notas" class="tela tela-principal">
+    <h2 style="font-family:'Lora',serif;font-size:1.05rem;color:var(--teal)">Notas Lidas</h2>
+    <div id="lista-notas" class="secao-gap"></div>
+  </section>
+
+  <!-- ── TELA FLUXO DE CAIXA ──────────────────────────────────────────── -->
+  <section id="tela-fluxo" class="tela tela-principal">
+    <h2 style="font-family:'Lora',serif;font-size:1.05rem;color:var(--teal)">Fluxo de Caixa</h2>
+
+    <!-- Cartão de saldo -->
+    <div class="card-saldo">
+      <div class="saldo-label">Saldo Atual</div>
+      <div id="saldo-atual" class="saldo-valor positivo">R$ 0,00</div>
+      <div class="saldo-linha">
+        <div><span>Entradas</span><strong id="total-entradas">R$ 0,00</strong></div>
+        <div><span>Saídas</span><strong id="total-saidas">R$ 0,00</strong></div>
+      </div>
+    </div>
+
+    <!-- Gráfico -->
+    <canvas id="grafico-fluxo"></canvas>
+
+    <!-- Formulário de entrada manual -->
+    <div class="card-form">
+      <h3>+ Registrar Entrada</h3>
+      <form id="form-entrada" style="display:flex;flex-direction:column;gap:10px">
+        <div class="campo">
+          <label>Descrição</label>
+          <input name="entrada-descricao" type="text" placeholder="Ex: Pagamento recebido" required />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="campo">
+            <label>Valor (R$)</label>
+            <input name="entrada-valor" type="number" step="0.01" min="0.01" placeholder="0,00" required class="mono" />
+          </div>
+          <div class="campo">
+            <label>Data</label>
+            <input id="entrada-data" name="entrada-data" type="date" required />
+          </div>
+        </div>
+        <button type="submit" class="btn-ouro">Registrar</button>
+      </form>
+    </div>
+
+    <!-- Lista de lançamentos -->
+    <p class="secao-titulo">Lançamentos recentes</p>
+    <div id="lista-lancamentos" class="secao-gap"></div>
+  </section>
+
+  <!-- ── Nav inferior ──────────────────────────────────────────────────── -->
+  <nav class="nav-inferior">
+    <button class="nav-btn ativo" onclick="irPara('home');atualizarNav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Início
+    </button>
+    <button class="nav-btn" onclick="irPara('camera');atualizarNav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Escanear
+    </button>
+    <button class="nav-btn" onclick="irPara('notas');atualizarNav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Notas
+    </button>
+    <button class="nav-btn" onclick="irPara('fluxo');atualizarNav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Fluxo
+    </button>
+  </nav>
+
+</div><!-- /container -->
+
+<script>
+function atualizarNav(btn) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+}
+// Quando a câmera for aberta pelo botão home também marca o nav
+const _abrirCamera = abrirCamera;
+window.abrirCamera = function() { document.querySelectorAll('.nav-btn')[1].classList.add('ativo'); _abrirCamera(); };
+</script>
+
+<script src="config.js"></script>
+<script src="barcode.js"></script>
+<script src="ocr.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
