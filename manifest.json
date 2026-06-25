@@ -1,0 +1,25 @@
+{
+  "name": "Helmigui Serviços Financeiros",
+  "short_name": "Helmigui",
+  "description": "Leitura de notas e fluxo de caixa para clientes da Helmigui",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1E4D25",
+  "theme_color": "#1E4D25",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

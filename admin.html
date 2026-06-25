@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1E4D25" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="identidade-visual/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="identidade-visual/icon-mark.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <title>Admin — Helmigui</title>
+
+  <style>
+    :root {
+      --paper: #F1F4EC;
+      --paper-deep: #E5EADC;
+      --ink: #1C2B22;
+      --ink-soft: #5B6B5E;
+      --teal: #1E4D25;
+      --teal-light: #2F6B3E;
+      --gold: #D1A84E;
+      --clay: #A8472E;
+      --line: #C9D1BD;
+      --radius: 12px;
+      --sombra: 0 2px 12px rgba(28,43,34,.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ── Cabeçalho admin ─────────────────────────────────────────────────── */
+    .cabecalho {
+      background: var(--teal);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 20;
+    }
+    .cabecalho img.logo { height: 36px; object-fit: contain; }
+    .cabecalho-info { display: flex; flex-direction: column; }
+    .cabecalho-subtitulo { font-size: 0.65rem; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .06em; }
+    .cabecalho-titulo { font-family: 'Lora', serif; font-size: 0.95rem; font-weight: 700; color: #fff; }
+
+    /* ── Botão hambúrguer ────────────────────────────────────────────────── */
+    .btn-hamburger {
+      background: none; border: none; cursor: pointer;
+      display: flex; flex-direction: column; gap: 5px; padding: 6px;
+    }
+    .btn-hamburger span {
+      display: block; width: 24px; height: 2.5px;
+      background: #fff; border-radius: 2px;
+      transition: transform .2s, opacity .2s;
+    }
+
+    /* ── Overlay ─────────────────────────────────────────────────────────── */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(28,43,34,.5);
+      z-index: 25;
+    }
+    .overlay.visivel { display: block; }
+
+    /* ── Menu lateral (drawer) ───────────────────────────────────────────── */
+    .menu-lateral {
+      position: fixed;
+      top: 0; left: -280px;
+      width: 280px; height: 100dvh;
+      background: #fff;
+      z-index: 30;
+      display: flex; flex-direction: column;
+      box-shadow: 4px 0 24px rgba(28,43,34,.18);
+      transition: left .25s ease;
+      overflow-y: auto;
+    }
+    .menu-lateral.aberto { left: 0; }
+
+    /* Em desktop: menu lateral sempre visível */
+    @media (min-width: 900px) {
+      .menu-lateral {
+        position: sticky;
+        left: 0; top: 0;
+        height: 100vh;
+        box-shadow: 2px 0 12px rgba(28,43,34,.08);
+      }
+      .btn-hamburger { display: none; }
+      .overlay { display: none !important; }
+      body { flex-direction: row; align-items: stretch; }
+      .container { flex-direction: row; max-width: 100%; }
+      .conteudo-admin { flex: 1; overflow-y: auto; }
+    }
+
+    .menu-topo {
+      background: var(--teal);
+      padding: 20px 16px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .menu-topo img { height: 32px; object-fit: contain; }
+    .menu-fechar {
+      background: none; border: none; cursor: pointer;
+      color: #fff; font-size: 1.3rem; line-height: 1; padding: 4px 8px;
+    }
+    @media (min-width: 900px) { .menu-fechar { display: none; } }
+
+    .menu-label {
+      font-size: 0.65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--ink-soft);
+      padding: 12px 16px 4px;
+    }
+
+    .menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      border: none; background: none;
+      width: 100%; text-align: left;
+      cursor: pointer;
+      font-size: 0.9rem; color: var(--ink); font-weight: 500;
+      border-bottom: 1px solid var(--paper-deep);
+      transition: background .12s;
+    }
+    .menu-item:hover { background: var(--paper); }
+    .menu-item .icone { font-size: 1.1rem; width: 24px; text-align: center; }
+    .menu-item .seta {
+      margin-left: auto; font-size: 0.8rem;
+      transition: transform .2s;
+    }
+    .menu-item.expandido .seta { transform: rotate(180deg); }
+
+    /* ── Submenu (accordion) ─────────────────────────────────────────────── */
+    .submenu {
+      display: none;
+      flex-direction: column;
+      background: var(--paper-deep);
+      border-bottom: 1px solid var(--line);
+    }
+    .submenu.aberto { display: flex; }
+    .submenu-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px 10px 36px;
+      border: none; background: none;
+      width: 100%; text-align: left;
+      cursor: pointer;
+      font-size: 0.85rem; color: var(--ink-soft); font-weight: 500;
+      border-bottom: 1px solid var(--line);
+      transition: background .12s;
+    }
+    .submenu-item:hover { background: var(--paper); color: var(--teal); }
+
+    /* ── Conteúdo principal admin ────────────────────────────────────────── */
+    .conteudo-admin {
+      flex: 1;
+      padding: 20px 16px 32px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .tela-admin { display: none; }
+    .tela-admin.ativa { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── Formulário cliente ──────────────────────────────────────────────── */
+    .campo { display: flex; flex-direction: column; gap: 5px; }
+    .campo label { font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+    .campo input,
+    .campo select {
+      background: #fff;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.92rem; color: var(--ink);
+      font-family: inherit; outline: none;
+      transition: border-color .15s;
+    }
+    .campo input:focus, .campo select:focus { border-color: var(--teal); }
+    .campo input.mono { font-family: 'IBM Plex Mono', monospace; }
+
+    .toggle-wpp {
+      display: flex; gap: 8px;
+    }
+    .toggle-wpp label {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 9px;
+      border: 1.5px solid var(--line); border-radius: 8px;
+      cursor: pointer; font-size: 0.88rem; font-weight: 500;
+      transition: all .15s;
+    }
+    .toggle-wpp input[type="radio"] { display: none; }
+    .toggle-wpp input[type="radio"]:checked + span {
+      /* estilo via JS porque label envolve input */
+    }
+
+    .btn-primario {
+      background: var(--teal); color: #fff; border: none;
+      border-radius: var(--radius); padding: 13px 20px;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer; width: 100%;
+    }
+    .btn-primario:hover { background: var(--teal-light); }
+    .btn-secundario {
+      background: var(--paper-deep); color: var(--ink);
+      border: 1px solid var(--line); border-radius: 8px;
+      padding: 8px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-perigo {
+      background: rgba(168,71,46,.1); color: var(--clay);
+      border: 1px solid rgba(168,71,46,.25); border-radius: 8px;
+      padding: 8px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    }
+
+    #msg-cliente-salvo {
+      display: none;
+      background: #d4edda; color: #155724;
+      border: 1px solid #c3e6cb; border-radius: 8px;
+      padding: 10px 14px; font-size: 0.85rem; text-align: center;
+    }
+
+    /* ── Cards de cliente ────────────────────────────────────────────────── */
+    .card-cliente {
+      background: #fff; border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 14px 16px;
+      box-shadow: var(--sombra);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .cliente-nome { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .cliente-detalhe { font-size: 0.78rem; color: var(--ink-soft); }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    .badge-wpp {
+      display: inline-block; font-size: 0.65rem; font-weight: 700;
+      background: #E6F0E8; color: var(--teal);
+      padding: 2px 7px; border-radius: 20px; margin-left: 4px;
+    }
+    .cliente-acoes { display: flex; gap: 8px; margin-top: 10px; }
+    .vazio { text-align: center; color: var(--ink-soft); font-size: 0.85rem; padding: 24px 0; }
+
+    .page-titulo {
+      font-family: 'Lora', serif; font-size: 1.05rem;
+      color: var(--teal); font-weight: 700;
+    }
+    .page-desc { font-size: 0.78rem; color: var(--ink-soft); }
+
+    /* ── Link voltar ao app ──────────────────────────────────────────────── */
+    .link-voltar {
+      color: var(--teal); font-size: 0.8rem;
+      text-decoration: none; font-weight: 600;
+    }
+    .link-voltar:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div id="overlay" class="overlay" onclick="fecharMenu()"></div>
+
+<div class="container">
+
+  <!-- ── Cabeçalho ──────────────────────────────────────────────────────── -->
+  <header class="cabecalho">
+    <button class="btn-hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="cabecalho-info">
+      <span class="cabecalho-subtitulo">Painel</span>
+      <span class="cabecalho-titulo">Administração</span>
+    </div>
+    <img src="identidade-visual/icon-mark.png" alt="Helmigui" class="logo" onerror="this.style.display='none'" />
+  </header>
+
+  <!-- ── Menu lateral ───────────────────────────────────────────────────── -->
+  <nav id="menu-lateral" class="menu-lateral">
+    <div class="menu-topo">
+      <img src="identidade-visual/logo-oficial.png" alt="Helmigui" onerror="this.style.display='none'" />
+      <button class="menu-fechar" onclick="fecharMenu()">✕</button>
+    </div>
+
+    <p class="menu-label">Módulos</p>
+
+    <!-- Item "Cliente" com accordion -->
+    <button class="menu-item" id="btn-menu-cliente" onclick="toggleSubmenuCliente()">
+      <span class="icone">👥</span>
+      Clientes
+      <span class="seta">▾</span>
+    </button>
+    <div id="submenu-cliente" class="submenu">
+      <button class="submenu-item" onclick="irParaAdmin('cadastrar-cliente')">
+        ➕ Cadastrar Cliente
+      </button>
+      <button class="submenu-item" onclick="irParaAdmin('clientes-ativos')">
+        📋 Clientes Ativos
+      </button>
+    </div>
+
+    <div style="flex:1"></div>
+    <div style="padding:16px;border-top:1px solid var(--line)">
+      <a href="index.html" class="link-voltar">← Voltar ao app do cliente</a>
+    </div>
+  </nav>
+
+  <!-- ── Conteúdo ───────────────────────────────────────────────────────── -->
+  <main class="conteudo-admin">
+
+    <!-- Tela: Cadastrar Cliente -->
+    <div id="admin-cadastrar-cliente" class="tela-admin">
+      <h2 class="page-titulo">Cadastrar Cliente</h2>
+      <p class="page-desc">Preencha os dados para adicionar um novo cliente ativo.</p>
+
+      <div id="msg-cliente-salvo">✅ Cliente salvo com sucesso!</div>
+
+      <form id="form-cliente" style="display:flex;flex-direction:column;gap:12px">
+        <!-- id oculto para edição -->
+        <input type="hidden" id="cli-id" name="cli-id" value="" />
+
+        <div class="campo">
+          <label>Nome do Cliente</label>
+          <input id="cli-nome" name="cli-nome" type="text" placeholder="Razão social ou nome" required />
+        </div>
+
+        <div class="campo">
+          <label>CNPJ</label>
+          <input id="cli-cnpj" name="cli-cnpj" type="text" placeholder="00.000.000/0000-00" class="mono" />
+        </div>
+
+        <div class="campo">
+          <label>Telefone</label>
+          <input id="cli-telefone" name="cli-telefone" type="tel" placeholder="(00) 00000-0000" />
+        </div>
+
+        <div class="campo">
+          <label>Este telefone é WhatsApp?</label>
+          <select id="eh-whatsapp" name="eh-whatsapp" onchange="atualizarCampoWhatsApp()">
+            <option value="sim">✅ Sim, é o mesmo número</option>
+            <option value="nao">❌ Não, tenho outro número</option>
+          </select>
+        </div>
+
+        <div id="campo-whatsapp-extra" class="campo" style="display:none">
+          <label>WhatsApp (número diferente)</label>
+          <input id="wpp-extra" name="wpp-extra" type="tel" placeholder="(00) 00000-0000" />
+        </div>
+
+        <div class="campo">
+          <label>Endereço</label>
+          <input id="cli-endereco" name="cli-endereco" type="text" placeholder="Rua, número, cidade" />
+        </div>
+
+        <div class="campo">
+          <label>Banco Utilizado</label>
+          <select id="cli-banco" name="cli-banco">
+            <option value="">— Selecione —</option>
+            <option>Bradesco</option>
+            <option>Itaú</option>
+            <option>Santander</option>
+            <option>Banco do Brasil</option>
+            <option>Caixa Econômica Federal</option>
+            <option>Nubank</option>
+            <option>Inter</option>
+            <option>C6 Bank</option>
+            <option>Sicoob</option>
+            <option>Sicredi</option>
+            <option>BTG Pactual</option>
+            <option>XP</option>
+            <option>Outro</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primario">💾 Salvar cliente</button>
+        <button type="button" class="btn-secundario" onclick="irParaAdmin('clientes-ativos')">Cancelar</button>
+      </form>
+    </div>
+
+    <!-- Tela: Clientes Ativos -->
+    <div id="admin-clientes-ativos" class="tela-admin">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h2 class="page-titulo">Clientes Ativos</h2>
+        <button class="btn-primario" style="width:auto;padding:8px 14px;font-size:0.82rem"
+          onclick="irParaAdmin('cadastrar-cliente')">+ Novo</button>
+      </div>
+      <div id="lista-clientes" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+
+  </main>
+
+</div><!-- /container -->
+
+<script src="config.js"></script>
+<script src="admin.js"></script>
+
+<script>
+// Sincroniza overlay com menu
+const _toggleMenu = toggleMenu;
+window.toggleMenu = function() {
+  _toggleMenu();
+  const menu = document.getElementById('menu-lateral');
+  const overlay = document.getElementById('overlay');
+  overlay.classList.toggle('visivel', menu.classList.contains('aberto'));
+};
+const _fecharMenu = fecharMenu;
+window.fecharMenu = function() {
+  _fecharMenu();
+  document.getElementById('overlay').classList.remove('visivel');
+};
+
+// Destaca item ativo no menu
+const _irParaAdmin = irParaAdmin;
+window.irParaAdmin = function(tela) {
+  _irParaAdmin(tela);
+  document.querySelectorAll('.submenu-item').forEach(b => b.style.fontWeight = '');
+  const mapa = { 'cadastrar-cliente': 0, 'clientes-ativos': 1 };
+  const idx = mapa[tela];
+  if (idx !== undefined) {
+    const itens = document.querySelectorAll('.submenu-item');
+    if (itens[idx]) itens[idx].style.fontWeight = '700';
+  }
+};
+
+// Mantém submenu aberto em desktop
+function verificarDesktop() {
+  if (window.innerWidth >= 900) {
+    document.getElementById('menu-lateral').classList.add('aberto');
+    document.getElementById('submenu-cliente').classList.add('aberto');
+    document.getElementById('btn-menu-cliente').classList.add('expandido');
+  }
+}
+verificarDesktop();
+window.addEventListener('resize', verificarDesktop);
+</script>
+
+</body>
+</html>
